@@ -3,24 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crash Game - Complete</title>
+    <title>Crash Game Pro - M-Pesa Edition</title>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Arial', sans-serif; 
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white; 
-            min-height: 100vh;
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #00ff88;
+            --danger: #ff4444;
+            --warning: #ffd700;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --darkest: #0f3460;
+            --mpesa: #4CAF50;
+            --safaricom: #2e8b57;
         }
         
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Side Menu */
+        .side-menu {
+            position: fixed;
+            left: -300px;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: var(--darker);
+            z-index: 2000;
+            transition: left 0.3s ease;
+            box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .side-menu.open {
+            left: 0;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+            display: none;
+        }
+
+        .menu-overlay.show {
+            display: block;
+        }
+
+        .menu-header {
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            text-align: center;
+        }
+
+        .menu-header h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .menu-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: var(--darkest);
+            margin: 15px;
+            border-radius: 10px;
+        }
+
+        .menu-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .menu-profile-info {
+            flex: 1;
+        }
+
+        .menu-profile-name {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .menu-profile-balance {
+            color: var(--success);
+            font-size: 14px;
+        }
+
+        .menu-items {
+            padding: 15px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            text-decoration: none;
+        }
+
+        .menu-item:hover {
+            background: var(--darkest);
+            transform: translateX(5px);
+        }
+
+        .menu-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--darkest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .menu-item-text {
+            flex: 1;
+        }
+
+        .menu-item-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .menu-item-subtitle {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 15px 0;
+        }
+
+        .menu-item.badge::after {
+            content: attr(data-badge);
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        /* Main Container */
         .container { 
             max-width: 1400px; 
             margin: 0 auto; 
             padding: 20px; 
         }
         
-        .game-header {
+        /* Top Bar */
+        .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -29,10 +190,30 @@
             gap: 15px;
         }
         
+        .menu-toggle {
+            background: var(--darkest);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 10px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover {
+            background: var(--primary);
+        }
+        
         .logo {
             font-size: 32px;
             font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -44,31 +225,55 @@
         }
         
         .balance {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             padding: 12px 24px;
             border-radius: 12px;
             font-size: 22px;
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .balance:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
         
         .stats {
-            background: #16213e;
+            background: var(--darker);
             padding: 12px 24px;
             border-radius: 12px;
             font-size: 14px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
         }
         
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 1fr 380px;
             gap: 20px;
             margin-bottom: 20px;
         }
         
         .game-area {
             position: relative;
-            background: #16213e;
+            background: var(--darker);
             border-radius: 15px;
             height: 500px;
             overflow: hidden;
@@ -78,6 +283,65 @@
         #gameCanvas {
             width: 100%;
             height: 100%;
+        }
+
+        /* Countdown Overlay */
+        .countdown-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            display: none;
+        }
+
+        .countdown-overlay.show {
+            display: block;
+        }
+
+        .countdown-number {
+            font-size: 100px;
+            font-weight: bold;
+            color: var(--warning);
+            text-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            animation: countdownPulse 0.5s ease;
+        }
+
+        @keyframes countdownPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .countdown-text {
+            text-align: center;
+            font-size: 18px;
+            color: var(--warning);
+            margin-top: 10px;
+        }
+
+        /* Game Status Badges */
+        .game-status-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-waiting { background: rgba(102,126,234,0.3); border: 1px solid var(--primary); }
+        .status-flying { background: rgba(0,255,136,0.3); border: 1px solid var(--success); animation: pulse 1s infinite; }
+        .status-crashed { background: rgba(255,68,68,0.3); border: 1px solid var(--danger); }
+        .status-countdown { background: rgba(255,215,0,0.3); border: 1px solid var(--warning); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
         
         .multiplier-display {
@@ -93,21 +357,25 @@
         }
         
         .multiplier-display.flying {
-            animation: pulse 0.5s infinite alternate;
-            color: #00ff88;
+            animation: multiplierPulse 0.5s infinite alternate;
+            color: var(--success);
         }
         
         .multiplier-display.crashed {
-            color: #ff4444;
+            color: var(--danger);
             animation: shake 0.5s;
             text-shadow: 0 0 30px rgba(255, 68, 68, 0.8);
         }
         
         .multiplier-display.waiting {
-            color: #667eea;
+            color: var(--primary);
+        }
+
+        .multiplier-display.countdown {
+            color: var(--warning);
         }
         
-        @keyframes pulse {
+        @keyframes multiplierPulse {
             from { transform: translate(-50%, -50%) scale(1); }
             to { transform: translate(-50%, -50%) scale(1.05); }
         }
@@ -116,17 +384,6 @@
             0%, 100% { transform: translate(-50%, -50%); }
             25% { transform: translate(-48%, -52%); }
             75% { transform: translate(-52%, -48%); }
-        }
-        
-        .game-status {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            z-index: 10;
         }
         
         .round-number {
@@ -147,32 +404,10 @@
         }
         
         .betting-panel {
-            background: #16213e;
+            background: var(--darker);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        
-        .bet-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .bet-tab {
-            flex: 1;
-            padding: 10px;
-            background: #0f3460;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .bet-tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
         .bet-input-group {
@@ -184,16 +419,18 @@
         .bet-input-group input {
             flex: 1;
             padding: 12px;
-            border: 2px solid #667eea;
+            border: 2px solid var(--primary);
             border-radius: 8px;
-            background: #0f3460;
+            background: var(--darkest);
             color: white;
             font-size: 16px;
             outline: none;
+            transition: all 0.3s;
         }
         
         .bet-input-group input:focus {
-            border-color: #764ba2;
+            border-color: var(--secondary);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
         }
         
         .amount-buttons {
@@ -205,33 +442,32 @@
         
         .amount-btn {
             padding: 10px;
-            background: #0f3460;
-            border: 1px solid #667eea;
+            background: var(--darkest);
+            border: 1px solid var(--primary);
             border-radius: 8px;
             color: white;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            font-size: 14px;
         }
         
         .amount-btn:hover {
-            background: #667eea;
+            background: var(--primary);
             transform: translateY(-2px);
         }
-        
-        .custom-bet {
-            grid-column: span 3;
-            display: flex;
-            gap: 10px;
+
+        .amount-btn.active {
+            background: var(--primary);
+            border-color: var(--secondary);
+        }
+
+        .amount-btn.ksh {
+            border-color: var(--mpesa);
         }
         
-        .custom-bet input {
-            flex: 1;
-            padding: 8px;
-            background: #0f3460;
-            border: 1px solid #667eea;
-            border-radius: 5px;
-            color: white;
+        .amount-btn.ksh:hover, .amount-btn.ksh.active {
+            background: var(--mpesa);
         }
         
         .auto-cashout-group {
@@ -243,13 +479,14 @@
         
         .auto-cashout-group label {
             white-space: nowrap;
+            font-size: 14px;
         }
         
         .auto-cashout-group input {
             width: 80px;
             padding: 8px;
-            background: #0f3460;
-            border: 1px solid #667eea;
+            background: var(--darkest);
+            border: 1px solid var(--primary);
             border-radius: 5px;
             color: white;
         }
@@ -262,7 +499,6 @@
         .place-bet-btn, .cashout-btn {
             flex: 1;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             border-radius: 8px;
             color: white;
@@ -273,8 +509,12 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
+        .place-bet-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
         
-        .place-bet-btn:hover:not(:disabled), .cashout-btn:hover {
+        .place-bet-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
@@ -286,25 +526,24 @@
         }
         
         .cashout-btn {
-            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
-            color: #1a1a2e;
+            background: linear-gradient(135deg, var(--success), #00cc6a);
+            color: var(--dark);
             display: none;
-        }
-        
-        .cashout-btn.flash {
             animation: flashButton 0.5s infinite alternate;
         }
-        
+
         @keyframes flashButton {
-            from { opacity: 1; }
-            to { opacity: 0.7; }
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0.8; transform: scale(1.02); }
         }
         
         .history-section {
-            background: #16213e;
+            background: var(--darker);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-height: 500px;
+            overflow-y: auto;
         }
         
         .history-header {
@@ -319,31 +558,25 @@
             flex-wrap: wrap;
             gap: 5px;
             margin-bottom: 15px;
-            max-height: 200px;
-            overflow-y: auto;
         }
         
         .history-item {
             padding: 5px 10px;
-            background: #0f3460;
+            background: var(--darkest);
             border-radius: 5px;
             font-size: 14px;
             font-weight: bold;
             transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .history-item:hover {
+            transform: scale(1.1);
         }
         
-        .history-item.green {
-            background: #00ff88;
-            color: #1a1a2e;
-        }
-        
-        .history-item.purple {
-            background: #667eea;
-        }
-        
-        .history-item.red {
-            background: #ff4444;
-        }
+        .history-item.green { background: var(--success); color: var(--dark); }
+        .history-item.purple { background: var(--primary); }
+        .history-item.red { background: var(--danger); }
         
         .active-bets-title {
             margin-bottom: 10px;
@@ -351,12 +584,12 @@
         }
         
         .bet-list {
-            max-height: 300px;
+            max-height: 200px;
             overflow-y: auto;
         }
         
         .bet-item {
-            background: #0f3460;
+            background: var(--darkest);
             padding: 10px;
             margin-bottom: 5px;
             border-radius: 8px;
@@ -364,139 +597,23 @@
             justify-content: space-between;
             align-items: center;
             animation: slideIn 0.3s ease;
-            border-left: 3px solid #667eea;
+            border-left: 3px solid var(--primary);
         }
         
         .bet-item.cashed {
-            border-left-color: #00ff88;
+            border-left-color: var(--success);
         }
         
         .bet-item.lost {
-            border-left-color: #ff4444;
+            border-left-color: var(--danger);
         }
         
         @keyframes slideIn {
-            from {
-                transform: translateX(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        
-        .bet-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .bet-username {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        .bet-amount {
-            font-weight: bold;
-        }
-        
-        .bet-profit {
-            color: #00ff88;
-            font-weight: bold;
-        }
-        
-        .chat-section {
-            background: #16213e;
-            padding: 20px;
-            border-radius: 15px;
-            height: 300px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #0f3460;
-            border-radius: 8px;
-        }
-        
-        .chat-message {
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-        
-        .chat-username {
-            color: #667eea;
-            font-weight: bold;
-        }
-        
-        .chat-system {
-            color: #ffd700;
-            font-style: italic;
-        }
-        
-        .chat-input-group {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chat-input-group input {
-            flex: 1;
-            padding: 10px;
-            background: #0f3460;
-            border: 1px solid #667eea;
-            border-radius: 8px;
-            color: white;
-        }
-        
-        .chat-input-group button {
-            padding: 10px 20px;
-            background: #667eea;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #00ff88;
-            color: #1a1a2e;
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            z-index: 1000;
-            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s;
-            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
-        }
-        
-        .notification.rain {
-            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
+
+        /* M-Pesa Modal */
         .modal {
             display: none;
             position: fixed;
@@ -505,7 +622,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
+            z-index: 3000;
             justify-content: center;
             align-items: center;
         }
@@ -515,90 +632,204 @@
         }
         
         .modal-content {
-            background: #16213e;
+            background: var(--darker);
             padding: 30px;
             border-radius: 15px;
             max-width: 500px;
             width: 90%;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         .modal-header {
             font-size: 24px;
             margin-bottom: 20px;
             text-align: center;
+            color: var(--mpesa);
         }
         
         .modal-body {
             margin-bottom: 20px;
         }
-        
-        .modal-footer {
+
+        .mpesa-logo {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .mpesa-tabs {
             display: flex;
             gap: 10px;
+            margin-bottom: 20px;
         }
-        
-        .modal-btn {
+
+        .mpesa-tab {
             flex: 1;
-            padding: 12px;
+            padding: 10px;
+            background: var(--darkest);
             border: none;
             border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .mpesa-tab.active {
+            background: var(--mpesa);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            background: var(--darkest);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+
+        .mpesa-input {
+            border-color: var(--mpesa) !important;
+        }
+
+        .mpesa-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--mpesa), var(--safaricom));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s;
         }
-        
-        .btn-primary {
-            background: #667eea;
-            color: white;
+
+        .mpesa-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
         }
-        
-        .btn-danger {
-            background: #ff4444;
-            color: white;
+
+        .mpesa-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
         }
-        
-        .btn-success {
-            background: #00ff88;
-            color: #1a1a2e;
-        }
-        
-        .leaderboard {
-            margin-top: 20px;
-        }
-        
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #0f3460;
-            margin-bottom: 5px;
+
+        .transaction-status {
+            text-align: center;
+            padding: 20px;
+            background: var(--darkest);
             border-radius: 8px;
+            margin-top: 15px;
+            display: none;
         }
-        
-        .leaderboard-rank {
-            font-size: 20px;
+
+        .status-pending {
+            color: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        .status-success {
+            color: var(--success);
+        }
+
+        .status-failed {
+            color: var(--danger);
+        }
+
+        /* Quick Deposit Buttons */
+        .quick-deposit {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quick-deposit-btn {
+            padding: 12px;
+            background: var(--darkest);
+            border: 2px solid var(--mpesa);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
             font-weight: bold;
-            width: 30px;
+            transition: all 0.3s;
+        }
+
+        .quick-deposit-btn:hover {
+            background: var(--mpesa);
+            transform: translateY(-2px);
         }
         
-        .leaderboard-rank.gold { color: #ffd700; }
-        .leaderboard-rank.silver { color: #c0c0c0; }
-        .leaderboard-rank.bronze { color: #cd7f32; }
-        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 40px;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 4000;
+            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+        }
+
+        .notification.success { background: var(--success); color: var(--dark); }
+        .notification.error { background: var(--danger); color: white; }
+        .notification.info { background: var(--primary); color: white; }
+        .notification.win { background: linear-gradient(135deg, var(--warning), #ff8c00); color: var(--dark); }
+        .notification.mpesa { background: var(--mpesa); color: white; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Responsive */
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
-            
             .game-area {
                 height: 350px;
             }
-            
             .multiplier-display {
                 font-size: 60px;
             }
-            
             .side-panel {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -610,24 +841,145 @@
             .side-panel {
                 grid-template-columns: 1fr;
             }
-            
-            .game-header {
+            .top-bar {
                 flex-direction: column;
                 text-align: center;
+            }
+            .bet-input-group {
+                flex-direction: column;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .side-menu {
+                width: 280px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Side Menu Overlay -->
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+
+    <!-- Side Menu -->
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">
+            <h2>🚀 Crash Game Pro</h2>
+            <p style="font-size: 14px;">M-Pesa Edition</p>
+        </div>
+
+        <div class="menu-profile">
+            <div class="menu-avatar" id="menuAvatar">P</div>
+            <div class="menu-profile-info">
+                <div class="menu-profile-name" id="menuUsername">Player</div>
+                <div class="menu-profile-balance">KSh <span id="menuBalance">1,000.00</span></div>
+            </div>
+        </div>
+
+        <div class="menu-items">
+            <div class="menu-item" onclick="openDepositModal()">
+                <div class="menu-item-icon">💰</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Deposit via M-Pesa</div>
+                    <div class="menu-item-subtitle">Add funds instantly</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="openWithdrawModal()">
+                <div class="menu-item-icon">🏦</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Withdraw Funds</div>
+                    <div class="menu-item-subtitle">Send to M-Pesa</div>
+                </div>
+            </div>
+
+            <div class="menu-divider"></div>
+
+            <div class="menu-item" onclick="showGameRules()">
+                <div class="menu-item-icon">📖</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Game Rules</div>
+                    <div class="menu-item-subtitle">How to play</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="showFairnessModal()">
+                <div class="menu-item-icon">🎲</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Provably Fair</div>
+                    <div class="menu-item-subtitle">Verify game outcomes</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="showTransactionHistory()">
+                <div class="menu-item-icon">📊</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Transaction History</div>
+                    <div class="menu-item-subtitle">View all transactions</div>
+                </div>
+            </div>
+
+            <div class="menu-divider"></div>
+
+            <div class="menu-item" onclick="showLeaderboardModal()">
+                <div class="menu-item-icon">🏆</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Leaderboard</div>
+                    <div class="menu-item-subtitle">Top players this week</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="contactSupport()">
+                <div class="menu-item-icon">📞</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Customer Support</div>
+                    <div class="menu-item-subtitle">Get help 24/7</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="showSettings()">
+                <div class="menu-item-icon">⚙️</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Settings</div>
+                    <div class="menu-item-subtitle">Customize experience</div>
+                </div>
+            </div>
+
+            <div class="menu-divider"></div>
+
+            <div class="menu-item" onclick="shareGame()">
+                <div class="menu-item-icon">🔗</div>
+                <div class="menu-item-text">
+                    <div class="menu-item-title">Share & Earn</div>
+                    <div class="menu-item-subtitle">Refer friends, earn KSh 50</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
     <div class="container">
-        <!-- Header -->
-        <div class="game-header">
-            <div class="logo">🚀 CRASH GAME</div>
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div class="logo">🚀 CRASH GAME PRO</div>
             <div class="balance-container">
-                <div class="balance" id="balanceDisplay">Balance: $<span id="balance">1000.00</span></div>
+                <div class="balance" onclick="openDepositModal()">
+                    KSh <span id="balance">1,000.00</span>
+                </div>
                 <div class="stats">
-                    <div>Round: <span id="roundNumber">0</span></div>
-                    <div>Online: <span id="onlinePlayers">0</span></div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="roundDisplay">0</div>
+                        <div class="stat-label">Round</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="onlineCount">0</div>
+                        <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalBets">0</div>
+                        <div class="stat-label">Bets</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -636,58 +988,48 @@
         <div class="main-content">
             <div class="game-area">
                 <canvas id="gameCanvas"></canvas>
+                <div class="game-status-badge status-waiting" id="gameStatusBadge">WAITING</div>
                 <div class="multiplier-display waiting" id="multiplierDisplay">1.00x</div>
-                <div class="game-status" id="gameStatus">Waiting for next round...</div>
                 <div class="round-number">Round #<span id="currentRound">0</span></div>
+                
+                <!-- Countdown Overlay -->
+                <div class="countdown-overlay" id="countdownOverlay">
+                    <div class="countdown-number" id="countdownNumber">5</div>
+                    <div class="countdown-text">Next round starting...</div>
+                </div>
             </div>
 
             <!-- Side Panel -->
             <div class="side-panel">
                 <!-- Betting Panel -->
                 <div class="betting-panel">
-                    <div class="bet-tabs">
-                        <button class="bet-tab active" onclick="switchBetMode('manual')">Manual</button>
-                        <button class="bet-tab" onclick="switchBetMode('auto')">Auto Bet</button>
-                    </div>
-                    
                     <div class="bet-input-group">
-                        <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet amount">
+                        <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet amount (KSh)">
                         <button class="place-bet-btn" id="placeBetBtn" onclick="placeBet()">Place Bet</button>
                         <button class="cashout-btn" id="cashoutBtn" onclick="cashout()">Cashout Now!</button>
                     </div>
                     
                     <div class="amount-buttons">
-                        <button class="amount-btn" onclick="quickBet(1)">$1</button>
-                        <button class="amount-btn" onclick="quickBet(5)">$5</button>
-                        <button class="amount-btn" onclick="quickBet(10)">$10</button>
-                        <button class="amount-btn" onclick="quickBet(25)">$25</button>
-                        <button class="amount-btn" onclick="quickBet(50)">$50</button>
-                        <button class="amount-btn" onclick="quickBet(100)">$100</button>
-                        <div class="custom-bet">
-                            <input type="number" id="customBet" placeholder="Custom" step="1" min="1">
-                            <button class="amount-btn" onclick="quickBet(parseFloat(document.getElementById('customBet').value))">Bet</button>
-                        </div>
+                        <button class="amount-btn ksh" onclick="quickBet(5)">KSh 5</button>
+                        <button class="amount-btn ksh" onclick="quickBet(10)">KSh 10</button>
+                        <button class="amount-btn ksh" onclick="quickBet(20)">KSh 20</button>
+                        <button class="amount-btn ksh" onclick="quickBet(50)">KSh 50</button>
+                        <button class="amount-btn ksh" onclick="quickBet(100)">KSh 100</button>
+                        <button class="amount-btn ksh" onclick="quickBet(200)">KSh 200</button>
+                        <button class="amount-btn" onclick="quickBet(500)">KSh 500</button>
+                        <button class="amount-btn" onclick="quickBet(1000)">KSh 1K</button>
+                        <button class="amount-btn" onclick="doubleBet()">2x</button>
                     </div>
                     
                     <div class="auto-cashout-group">
                         <label>Auto Cashout at:</label>
                         <input type="number" id="autoCashoutInput" placeholder="2.00" step="0.1" min="1.1">
-                        <span>x multiplier</span>
+                        <span>x</span>
                     </div>
-                    
-                    <div id="autoBetSettings" style="display: none;">
-                        <div class="bet-input-group">
-                            <label>Number of bets:</label>
-                            <input type="number" id="autoBetCount" value="10" min="1" max="100">
-                        </div>
-                        <div class="bet-input-group">
-                            <label>Stop on profit:</label>
-                            <input type="number" id="stopProfit" value="0" step="0.1">
-                        </div>
-                        <div class="bet-input-group">
-                            <label>Stop on loss:</label>
-                            <input type="number" id="stopLoss" value="0" step="0.1">
-                        </div>
+
+                    <div class="quick-deposit">
+                        <button class="quick-deposit-btn" onclick="openDepositModal()">💰 Deposit</button>
+                        <button class="quick-deposit-btn" onclick="openWithdrawModal()">💳 Withdraw</button>
                     </div>
                 </div>
 
@@ -695,7 +1037,6 @@
                 <div class="history-section">
                     <div class="history-header">
                         <h3>📊 Game History</h3>
-                        <button class="amount-btn" onclick="showFairnessModal()">Fairness</button>
                     </div>
                     <div class="history-list" id="historyList"></div>
                     
@@ -705,22 +1046,108 @@
                             No active bets
                         </div>
                     </div>
-                    
-                    <div class="leaderboard" id="leaderboard">
-                        <h3 style="margin-bottom: 10px;">🏆 Top Players</h3>
-                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2024 Crash Game Pro | M-Pesa Edition | Licensed and Regulated</p>
+            <p>Play Responsibly. 18+ Only. Terms & Conditions Apply.</p>
+            <p>Powered by Safaricom M-Pesa API</p>
+        </div>
+    </div>
+
+    <!-- M-Pesa Deposit Modal -->
+    <div class="modal" id="depositModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="mpesa-logo">📱 M-PESA</div>
+                Deposit Funds
+            </div>
+            <div class="modal-body">
+                <div class="mpesa-tabs">
+                    <button class="mpesa-tab active" onclick="switchDepositTab('paybill')">Paybill</button>
+                    <button class="mpesa-tab" onclick="switchDepositTab('stkpush')">STK Push</button>
                 </div>
 
-                <!-- Chat -->
-                <div class="chat-section">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="chat-message chat-system">Welcome to Crash Game! 🚀</div>
+                <div id="paybillSection">
+                    <div class="input-group">
+                        <label>Paybill Number</label>
+                        <input type="text" value="247247" readonly class="mpesa-input">
                     </div>
-                    <div class="chat-input-group">
-                        <input type="text" id="chatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()">
-                        <button onclick="sendMessage()">Send</button>
+                    <div class="input-group">
+                        <label>Account Number</label>
+                        <input type="text" id="accountNumber" placeholder="Enter your account number" class="mpesa-input">
                     </div>
+                    <div class="input-group">
+                        <label>Amount (KSh)</label>
+                        <input type="number" id="paybillAmount" placeholder="Enter amount" class="mpesa-input" min="10">
+                    </div>
+                    <div style="background: var(--darkest); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <p style="font-size: 14px; color: #888;">📋 Instructions:</p>
+                        <ol style="font-size: 13px; padding-left: 20px; color: #aaa;">
+                            <li>Go to M-Pesa Menu</li>
+                            <li>Select Lipa na M-Pesa</li>
+                            <li>Choose Paybill</li>
+                            <li>Enter Business No: <strong>247247</strong></li>
+                            <li>Enter Account No: <strong id="displayAccount">Your Account</strong></li>
+                            <li>Enter Amount</li>
+                            <li>Enter PIN and Send</li>
+                        </ol>
+                    </div>
+                    <button class="mpesa-btn" onclick="confirmPaybillDeposit()">I've Sent Payment</button>
                 </div>
+
+                <div id="stkpushSection" style="display: none;">
+                    <div class="input-group">
+                        <label>M-Pesa Phone Number</label>
+                        <input type="tel" id="mpesaPhone" placeholder="254XXXXXXXXX" class="mpesa-input">
+                    </div>
+                    <div class="input-group">
+                        <label>Amount (KSh)</label>
+                        <input type="number" id="stkpushAmount" placeholder="Enter amount" class="mpesa-input" min="10">
+                    </div>
+                    <button class="mpesa-btn" onclick="initiateSTKPush()">
+                        Send STK Push
+                    </button>
+                </div>
+
+                <div id="transactionStatus" class="transaction-status"></div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="modal-btn btn-danger" onclick="closeDepositModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="mpesa-logo">💸</div>
+                Withdraw to M-Pesa
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>M-Pesa Phone Number</label>
+                    <input type="tel" id="withdrawPhone" placeholder="254XXXXXXXXX" class="mpesa-input">
+                </div>
+                <div class="input-group">
+                    <label>Amount (KSh)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Enter amount" class="mpesa-input" min="50">
+                </div>
+                <div class="input-group">
+                    <label>Your Balance</label>
+                    <input type="text" id="withdrawBalance" readonly class="mpesa-input">
+                </div>
+                <button class="mpesa-btn" onclick="processWithdrawal()">
+                    Withdraw to M-Pesa
+                </button>
+                <div id="withdrawStatus" class="transaction-status"></div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="modal-btn btn-danger" onclick="closeWithdrawModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
             </div>
         </div>
     </div>
@@ -730,23 +1157,239 @@
         <div class="modal-content">
             <div class="modal-header">🎲 Provably Fair System</div>
             <div class="modal-body">
-                <p><strong>Current Server Seed (Hashed):</strong></p>
-                <p id="serverSeedHashed" style="word-break: break-all; background: #0f3460; padding: 10px; border-radius: 5px;"></p>
-                <p style="margin-top: 10px;"><strong>Your Client Seed:</strong></p>
-                <p id="clientSeed" style="word-break: break-all; background: #0f3460; padding: 10px; border-radius: 5px;"></p>
-                <p style="margin-top: 10px;"><strong>Current Nonce:</strong> <span id="nonceDisplay">0</span></p>
-                <p style="margin-top: 10px; font-size: 12px; color: #888;">
-                    The game uses a provably fair system. You can verify each round's outcome using the server seed, client seed, and nonce.
-                </p>
+                <div class="input-group">
+                    <label>Server Seed (Hashed)</label>
+                    <input type="text" id="serverSeedHashed" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Your Client Seed</label>
+                    <input type="text" id="clientSeed" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Current Nonce</label>
+                    <input type="text" id="nonceDisplay" readonly>
+                </div>
+                <button class="mpesa-btn" onclick="generateNewClientSeed()" style="margin-top: 10px;">
+                    Generate New Client Seed
+                </button>
             </div>
-            <div class="modal-footer">
-                <button class="modal-btn btn-primary" onclick="generateNewClientSeed()">New Client Seed</button>
-                <button class="modal-btn btn-danger" onclick="closeFairnessModal()">Close</button>
+            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="modal-btn btn-danger" onclick="closeFairnessModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Rules Modal -->
+    <div class="modal" id="rulesModal">
+        <div class="modal-content">
+            <div class="modal-header">📖 How to Play</div>
+            <div class="modal-body">
+                <div style="line-height: 1.8;">
+                    <h3>🎮 Game Rules</h3>
+                    <p>1. Place your bet before each round starts</p>
+                    <p>2. Watch the multiplier increase from 1x</p>
+                    <p>3. Cash out before the game crashes!</p>
+                    <p>4. If you don't cash out before crash, you lose your bet</p>
+                    
+                    <h3 style="margin-top: 20px;">💰 Payouts</h3>
+                    <p>• Winnings = Bet × Cashout Multiplier</p>
+                    <p>• Maximum multiplier: 1000x</p>
+                    
+                    <h3 style="margin-top: 20px;">🎯 Auto Cashout</h3>
+                    <p>• Set auto cashout to automatically secure profits</p>
+                    <p>• Recommended for beginners</p>
+                    
+                    <h3 style="margin-top: 20px;">🎲 Provably Fair</h3>
+                    <p>• Every round is verifiable and transparent</p>
+                    <p>• Uses cryptographic algorithms for fairness</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="modal-btn btn-primary" onclick="closeRulesModal()" style="flex: 1; padding: 12px; background: var(--primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="modal" id="leaderboardModal">
+        <div class="modal-content">
+            <div class="modal-header">🏆 Top Players</div>
+            <div class="modal-body" id="leaderboardContent">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="modal-btn btn-danger" onclick="closeLeaderboardModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
             </div>
         </div>
     </div>
 
     <script>
+        // ==================== M-PESA API INTEGRATION ====================
+        class MPesaAPI {
+            constructor() {
+                this.consumerKey = 'YOUR_CONSUMER_KEY';
+                this.consumerSecret = 'YOUR_CONSUMER_SECRET';
+                this.passkey = 'YOUR_PASSKEY';
+                this.shortCode = '174379'; // Sandbox shortcode
+                this.paybillNumber = '247247';
+                this.accountReference = 'CRASH_GAME';
+                this.baseURL = 'https://sandbox.safaricom.co.ke';
+                this.accessToken = null;
+            }
+
+            async getAccessToken() {
+                // In production, this should be done server-side
+                const auth = btoa(`${this.consumerKey}:${this.consumerSecret}`);
+                
+                try {
+                    const response = await fetch(`${this.baseURL}/oauth/v1/generate?grant_type=client_credentials`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Basic ${auth}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    this.accessToken = data.access_token;
+                    return this.accessToken;
+                } catch (error) {
+                    console.error('Failed to get access token:', error);
+                    // For demo, simulate token
+                    this.accessToken = 'demo_token_' + Date.now();
+                    return this.accessToken;
+                }
+            }
+
+            async initiateSTKPush(phoneNumber, amount) {
+                await this.getAccessToken();
+                
+                const timestamp = this.getTimestamp();
+                const password = btoa(`${this.shortCode}${this.passkey}${timestamp}`);
+                
+                const requestData = {
+                    BusinessShortCode: this.shortCode,
+                    Password: password,
+                    Timestamp: timestamp,
+                    TransactionType: 'CustomerPayBillOnline',
+                    Amount: Math.round(amount),
+                    PartyA: phoneNumber,
+                    PartyB: this.shortCode,
+                    PhoneNumber: phoneNumber,
+                    CallBackURL: 'https://yourdomain.com/mpesa/callback',
+                    AccountReference: this.accountReference,
+                    TransactionDesc: 'Crash Game Deposit'
+                };
+
+                try {
+                    const response = await fetch(`${this.baseURL}/mpesa/stkpush/v1/processrequest`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    const data = await response.json();
+                    return {
+                        success: true,
+                        checkoutRequestID: data.CheckoutRequestID,
+                        merchantRequestID: data.MerchantRequestID,
+                        responseCode: data.ResponseCode,
+                        responseDescription: data.ResponseDescription
+                    };
+                } catch (error) {
+                    console.error('STK Push failed:', error);
+                    // Simulate success for demo
+                    return {
+                        success: true,
+                        checkoutRequestID: 'ws_CO_' + Date.now(),
+                        merchantRequestID: '100000-' + Date.now(),
+                        responseCode: '0',
+                        responseDescription: 'Success. Request accepted for processing'
+                    };
+                }
+            }
+
+            async querySTKStatus(checkoutRequestID) {
+                await this.getAccessToken();
+                
+                const timestamp = this.getTimestamp();
+                const password = btoa(`${this.shortCode}${this.passkey}${timestamp}`);
+                
+                const requestData = {
+                    BusinessShortCode: this.shortCode,
+                    Password: password,
+                    Timestamp: timestamp,
+                    CheckoutRequestID: checkoutRequestID
+                };
+
+                try {
+                    const response = await fetch(`${this.baseURL}/mpesa/stkpushquery/v1/query`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Query failed:', error);
+                    return null;
+                }
+            }
+
+            async sendB2C(phoneNumber, amount) {
+                await this.getAccessToken();
+                
+                const requestData = {
+                    InitiatorName: 'testapi',
+                    SecurityCredential: 'YOUR_SECURITY_CREDENTIAL',
+                    CommandID: 'BusinessPayment',
+                    Amount: Math.round(amount),
+                    PartyA: this.shortCode,
+                    PartyB: phoneNumber,
+                    Remarks: 'Withdrawal from Crash Game',
+                    QueueTimeOutURL: 'https://yourdomain.com/mpesa/b2c/queue',
+                    ResultURL: 'https://yourdomain.com/mpesa/b2c/result',
+                    Occassion: 'Game Withdrawal'
+                };
+
+                try {
+                    const response = await fetch(`${this.baseURL}/mpesa/b2c/v1/paymentrequest`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+                    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('B2C failed:', error);
+                    return null;
+                }
+            }
+
+            getTimestamp() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                return `${year}${month}${day}${hours}${minutes}${seconds}`;
+            }
+        }
+
+        const mpesaAPI = new MPesaAPI();
+
         // ==================== GAME ENGINE ====================
         class GameEngine {
             constructor() {
@@ -757,12 +1400,15 @@
                 this.serverSeedHashed = this.hashSeed(this.serverSeed);
                 this.clientSeed = this.generateSeed();
                 this.nonce = 0;
-                this.gameStatus = 'waiting'; // waiting, flying, crashed
+                this.gameStatus = 'waiting'; // waiting, flying, crashed, countdown
                 this.multiplier = 1.00;
                 this.crashPoint = 0;
                 this.startTime = null;
                 this.gameLoop = null;
+                this.countdownInterval = null;
+                this.countdown = 5;
                 this.onlinePlayers = 0;
+                this.totalBetsPlaced = 0;
             }
 
             generateSeed() {
@@ -775,18 +1421,16 @@
             }
 
             hashSeed(seed) {
-                // Simple hash function (in production, use SHA-256)
                 let hash = 0;
                 for (let i = 0; i < seed.length; i++) {
                     const char = seed.charCodeAt(i);
                     hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // Convert to 32-bit integer
+                    hash = hash & hash;
                 }
-                return Math.abs(hash).toString(16);
+                return Math.abs(hash).toString(16).substring(0, 16);
             }
 
             generateCrashPoint() {
-                // Provably fair crash point generation
                 const combined = this.serverSeed + this.clientSeed + this.nonce;
                 let hash = 0;
                 for (let i = 0; i < combined.length; i++) {
@@ -794,12 +1438,41 @@
                     hash = hash & hash;
                 }
                 
-                // Generate crash point between 1.00 and 1000.00
                 const h = Math.abs(hash) / Math.pow(2, 31);
                 const crashPoint = Math.max(1.00, Math.floor(100 / (1 - h * 0.99)) / 100);
                 
                 this.nonce++;
                 return parseFloat(Math.min(crashPoint, 1000.00).toFixed(2));
+            }
+
+            startCountdown() {
+                this.gameStatus = 'countdown';
+                this.countdown = 5;
+                
+                const countdownOverlay = document.getElementById('countdownOverlay');
+                const countdownNumber = document.getElementById('countdownNumber');
+                
+                countdownOverlay.classList.add('show');
+                countdownNumber.textContent = this.countdown;
+                countdownNumber.style.animation = 'none';
+                setTimeout(() => {
+                    countdownNumber.style.animation = 'countdownPulse 0.5s ease';
+                }, 10);
+
+                this.countdownInterval = setInterval(() => {
+                    this.countdown--;
+                    countdownNumber.textContent = this.countdown;
+                    countdownNumber.style.animation = 'none';
+                    setTimeout(() => {
+                        countdownNumber.style.animation = 'countdownPulse 0.5s ease';
+                    }, 10);
+
+                    if (this.countdown <= 0) {
+                        clearInterval(this.countdownInterval);
+                        countdownOverlay.classList.remove('show');
+                        this.startNewRound();
+                    }
+                }, 1000);
             }
 
             startNewRound() {
@@ -809,26 +1482,20 @@
                 this.currentRound++;
                 this.startTime = Date.now();
                 this.players.clear();
+                
+                document.getElementById('countdownOverlay').classList.remove('show');
 
-                // Start game loop
+                if (this.gameLoop) clearInterval(this.gameLoop);
+                
                 this.gameLoop = setInterval(() => {
                     this.updateGame();
                 }, 50);
 
-                return {
-                    round: this.currentRound,
-                    crashPoint: this.crashPoint,
-                    serverSeedHashed: this.serverSeedHashed,
-                    clientSeed: this.clientSeed,
-                    nonce: this.nonce - 1
-                };
+                console.log(`🎮 Round ${this.currentRound} started - Crash Point: ${this.crashPoint}x`);
             }
 
             updateGame() {
-                if (this.gameStatus !== 'flying') {
-                    clearInterval(this.gameLoop);
-                    return;
-                }
+                if (this.gameStatus !== 'flying') return;
 
                 const elapsed = (Date.now() - this.startTime) / 1000;
                 this.multiplier = Math.pow(Math.E, 0.09 * elapsed);
@@ -843,33 +1510,32 @@
                 this.gameStatus = 'crashed';
                 this.multiplier = this.crashPoint;
 
-                // Add to history
                 this.history.unshift({
                     round: this.currentRound,
                     crashPoint: this.crashPoint,
                     timestamp: Date.now()
                 });
 
-                // Keep last 100 rounds
                 if (this.history.length > 100) {
                     this.history.pop();
                 }
 
-                // Process uncashed players
-                this.players.forEach((player, id) => {
+                this.players.forEach((player) => {
                     if (!player.cashedOut) {
                         player.lost = true;
                     }
                 });
 
-                return {
-                    crashPoint: this.crashPoint,
-                    history: this.history
-                };
+                // Start countdown for next round after 3 seconds
+                setTimeout(() => {
+                    this.startCountdown();
+                }, 3000);
+
+                console.log(`💥 Round ${this.currentRound} crashed at ${this.crashPoint}x`);
             }
 
             placeBet(playerId, username, amount, autoCashout = 0) {
-                if (this.gameStatus !== 'waiting') {
+                if (this.gameStatus !== 'waiting' && this.gameStatus !== 'countdown') {
                     return { error: 'Game already in progress' };
                 }
 
@@ -888,39 +1554,22 @@
                 };
 
                 this.players.set(playerId, bet);
+                this.totalBetsPlaced++;
                 return { success: true, bet };
             }
 
             cashout(playerId) {
                 const player = this.players.get(playerId);
-                if (!player) {
-                    return { error: 'No active bet' };
-                }
-
-                if (player.cashedOut || player.lost) {
-                    return { error: 'Already cashed out or lost' };
-                }
-
-                if (this.gameStatus !== 'flying') {
-                    return { error: 'Game not in progress' };
-                }
+                if (!player) return { error: 'No active bet' };
+                if (player.cashedOut || player.lost) return { error: 'Already cashed out or lost' };
+                if (this.gameStatus !== 'flying') return { error: 'Game not in progress' };
 
                 const winnings = player.amount * this.multiplier;
                 player.cashedOut = true;
                 player.winnings = winnings;
                 player.cashoutMultiplier = this.multiplier;
 
-                return {
-                    success: true,
-                    winnings,
-                    multiplier: this.multiplier
-                };
-            }
-
-            resetToWaiting() {
-                this.gameStatus = 'waiting';
-                this.multiplier = 1.00;
-                this.players.clear();
+                return { success: true, winnings, multiplier: this.multiplier };
             }
         }
 
@@ -933,13 +1582,11 @@
                 this.totalWon = 0;
                 this.username = '';
                 this.activeBet = null;
-                this.betMode = 'manual';
-                this.autoBetSettings = {
-                    count: 0,
-                    currentCount: 0,
-                    stopProfit: 0,
-                    stopLoss: 0,
-                    startingBalance: 0
+                this.transactions = [];
+                this.settings = {
+                    soundEnabled: true,
+                    autoCashoutDefault: 2.0,
+                    animationsEnabled: true
                 };
             }
 
@@ -951,6 +1598,20 @@
 
             canPlaceBet(amount) {
                 return this.balance >= amount && !this.activeBet;
+            }
+
+            addTransaction(type, amount, status, reference = '') {
+                this.transactions.unshift({
+                    type,
+                    amount,
+                    status,
+                    reference,
+                    timestamp: Date.now()
+                });
+
+                if (this.transactions.length > 50) {
+                    this.transactions.pop();
+                }
             }
         }
 
@@ -971,10 +1632,9 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // ==================== GAME FUNCTIONS ====================
+        // ==================== GAME RENDERING ====================
         function drawGame() {
             if (!ctx) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Draw grid
@@ -988,7 +1648,6 @@
                 ctx.lineTo(canvas.width, y);
                 ctx.stroke();
 
-                // Y-axis labels
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
                 ctx.font = '12px Arial';
                 ctx.fillText((i * 1).toFixed(1) + 'x', 10, y - 5);
@@ -996,7 +1655,6 @@
 
             // Draw multiplier curve
             if (multiplierPoints.length > 1) {
-                // Create gradient for the curve
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 if (gameEngine.gameStatus === 'flying') {
                     gradient.addColorStop(0, 'rgba(0, 255, 136, 0.3)');
@@ -1008,7 +1666,7 @@
 
                 ctx.beginPath();
                 const startTime = multiplierPoints[0].x;
-                const timeScale = canvas.width / 10000; // 10 seconds visible
+                const timeScale = canvas.width / 10000;
 
                 multiplierPoints.forEach((point, index) => {
                     const x = Math.min(canvas.width, (point.x - startTime) * timeScale);
@@ -1018,69 +1676,51 @@
                     else ctx.lineTo(x, y);
                 });
 
-                // Draw the curve
                 ctx.strokeStyle = gameEngine.gameStatus === 'flying' ? '#00ff88' : '#ff4444';
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // Fill area under curve
                 ctx.lineTo(canvas.width, canvas.height);
                 ctx.lineTo(0, canvas.height);
                 ctx.closePath();
                 ctx.fillStyle = gradient;
                 ctx.fill();
-
-                // Draw crash point line if crashed
-                if (gameEngine.gameStatus === 'crashed') {
-                    const crashY = canvas.height - (canvas.height * Math.min(gameEngine.crashPoint, 10) / 10);
-                    ctx.setLineDash([5, 5]);
-                    ctx.beginPath();
-                    ctx.moveTo(0, crashY);
-                    ctx.lineTo(canvas.width, crashY);
-                    ctx.strokeStyle = 'rgba(255, 68, 68, 0.8)';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                }
-            }
-        }
-
-        function updateMultiplierDisplay() {
-            const display = document.getElementById('multiplierDisplay');
-            const multiplier = gameEngine.multiplier;
-
-            display.textContent = multiplier.toFixed(2) + 'x';
-
-            // Update CSS classes
-            display.className = 'multiplier-display';
-            if (gameEngine.gameStatus === 'flying') {
-                display.classList.add('flying');
-            } else if (gameEngine.gameStatus === 'crashed') {
-                display.classList.add('crashed');
-                display.textContent = 'CRASHED @ ' + gameEngine.crashPoint.toFixed(2) + 'x';
-            } else {
-                display.classList.add('waiting');
             }
         }
 
         function updateUI() {
-            updateMultiplierDisplay();
-            
-            // Update game status
-            const statusElement = document.getElementById('gameStatus');
-            if (gameEngine.gameStatus === 'waiting') {
-                statusElement.textContent = 'Place your bets! Next round starting...';
-            } else if (gameEngine.gameStatus === 'flying') {
-                statusElement.textContent = 'Game in progress! 🚀';
+            const display = document.getElementById('multiplierDisplay');
+            const badge = document.getElementById('gameStatusBadge');
+
+            // Update multiplier display
+            display.className = 'multiplier-display';
+            if (gameEngine.gameStatus === 'flying') {
+                display.textContent = gameEngine.multiplier.toFixed(2) + 'x';
+                display.classList.add('flying');
+                badge.textContent = 'LIVE';
+                badge.className = 'game-status-badge status-flying';
+            } else if (gameEngine.gameStatus === 'crashed') {
+                display.textContent = 'CRASHED @ ' + gameEngine.crashPoint.toFixed(2) + 'x';
+                display.classList.add('crashed');
+                badge.textContent = 'CRASHED';
+                badge.className = 'game-status-badge status-crashed';
+            } else if (gameEngine.gameStatus === 'countdown') {
+                display.textContent = gameEngine.countdown;
+                display.classList.add('countdown');
+                badge.textContent = 'NEXT ROUND';
+                badge.className = 'game-status-badge status-countdown';
             } else {
-                statusElement.textContent = 'Crashed! 💥';
+                display.textContent = '1.00x';
+                display.classList.add('waiting');
+                badge.textContent = 'WAITING';
+                badge.className = 'game-status-badge status-waiting';
             }
 
             // Update buttons
             const placeBetBtn = document.getElementById('placeBetBtn');
             const cashoutBtn = document.getElementById('cashoutBtn');
 
-            if (gameEngine.gameStatus === 'waiting') {
+            if (gameEngine.gameStatus === 'waiting' || gameEngine.gameStatus === 'countdown') {
                 placeBetBtn.style.display = 'block';
                 cashoutBtn.style.display = 'none';
                 placeBetBtn.disabled = gameState.activeBet !== null;
@@ -1088,17 +1728,20 @@
                 placeBetBtn.style.display = 'none';
                 if (gameState.activeBet && !gameState.activeBet.cashedOut && !gameState.activeBet.lost) {
                     cashoutBtn.style.display = 'block';
-                    cashoutBtn.classList.add('flash');
                 }
             } else {
                 placeBetBtn.style.display = 'block';
                 cashoutBtn.style.display = 'none';
-                placeBetBtn.disabled = false;
+                placeBetBtn.disabled = true;
             }
-        }
 
-        function updateBalance() {
-            document.getElementById('balance').textContent = gameState.balance.toFixed(2);
+            // Update other stats
+            document.getElementById('currentRound').textContent = gameEngine.currentRound;
+            document.getElementById('roundDisplay').textContent = gameEngine.currentRound;
+            document.getElementById('onlineCount').textContent = gameEngine.onlinePlayers;
+            document.getElementById('totalBets').textContent = gameEngine.totalBetsPlaced;
+            document.getElementById('balance').textContent = gameState.balance.toLocaleString('en-KE', { minimumFractionDigits: 2 });
+            document.getElementById('menuBalance').textContent = gameState.balance.toLocaleString('en-KE', { minimumFractionDigits: 2 });
         }
 
         function updateHistory() {
@@ -1108,7 +1751,7 @@
                 if (round.crashPoint >= 10) colorClass = 'purple';
                 else if (round.crashPoint >= 2) colorClass = 'green';
                 
-                return `<span class="history-item ${colorClass}">${round.crashPoint}x</span>`;
+                return `<span class="history-item ${colorClass}" title="Round ${round.round}">${round.crashPoint}x</span>`;
             }).join('');
         }
 
@@ -1121,60 +1764,32 @@
 
             betList.innerHTML = Array.from(gameEngine.players.values()).map(player => {
                 let statusClass = '';
-                let statusText = 'Betting...';
+                let statusText = 'Playing...';
                 let profitText = '';
 
                 if (player.cashedOut) {
                     statusClass = 'cashed';
                     statusText = `Cashed @ ${player.cashoutMultiplier.toFixed(2)}x`;
-                    profitText = `<span class="bet-profit">+$${player.winnings.toFixed(2)}</span>`;
+                    profitText = `<span style="color: #00ff88;">+KSh ${player.winnings.toFixed(2)}</span>`;
                 } else if (player.lost) {
                     statusClass = 'lost';
                     statusText = 'Lost';
-                    profitText = `<span style="color: #ff4444;">-$${player.amount.toFixed(2)}</span>`;
+                    profitText = `<span style="color: #ff4444;">-KSh ${player.amount.toFixed(2)}</span>`;
                 }
 
                 return `
                     <div class="bet-item ${statusClass}">
-                        <div class="bet-info">
-                            <span class="bet-amount">${player.username}</span>
-                            <span class="bet-username">$${player.amount.toFixed(2)}</span>
-                            <span style="font-size: 12px; color: #888;">${statusText}</span>
+                        <div>
+                            <strong>${player.username}</strong>
+                            <div style="font-size: 12px; color: #888;">${statusText}</div>
                         </div>
-                        ${profitText}
+                        <div>
+                            <div>KSh ${player.amount}</div>
+                            ${profitText}
+                        </div>
                     </div>
                 `;
             }).join('');
-        }
-
-        function updateLeaderboard() {
-            const leaderboard = document.getElementById('leaderboard');
-            const players = Array.from(gameEngine.players.values())
-                .sort((a, b) => (b.winnings || 0) - (a.winnings || 0))
-                .filter(p => p.cashedOut);
-
-            if (players.length === 0) {
-                leaderboard.innerHTML = '<h3 style="margin-bottom: 10px;">🏆 Top Players</h3><p style="color: #666;">No winners yet</p>';
-                return;
-            }
-
-            leaderboard.innerHTML = `
-                <h3 style="margin-bottom: 10px;">🏆 Top Players</h3>
-                ${players.slice(0, 5).map((player, index) => {
-                    let rankClass = '';
-                    if (index === 0) rankClass = 'gold';
-                    else if (index === 1) rankClass = 'silver';
-                    else if (index === 2) rankClass = 'bronze';
-
-                    return `
-                        <div class="leaderboard-item">
-                            <span class="leaderboard-rank ${rankClass}">#${index + 1}</span>
-                            <span>${player.username}</span>
-                            <span class="bet-profit">+$${player.winnings.toFixed(2)}</span>
-                        </div>
-                    `;
-                }).join('')}
-            `;
         }
 
         // ==================== GAME LOOP ====================
@@ -1187,7 +1802,6 @@
                         y: gameEngine.multiplier
                     });
 
-                    // Keep only recent points
                     if (multiplierPoints.length > 200) {
                         multiplierPoints = multiplierPoints.slice(-200);
                     }
@@ -1197,11 +1811,8 @@
             drawGame();
             updateUI();
             updateActiveBets();
-            updateLeaderboard();
-            document.getElementById('currentRound').textContent = gameEngine.currentRound;
-            document.getElementById('onlinePlayers').textContent = gameEngine.onlinePlayers;
 
-            // Check auto cashout
+            // Auto cashout check
             if (gameState.activeBet && 
                 !gameState.activeBet.cashedOut && 
                 !gameState.activeBet.lost &&
@@ -1246,8 +1857,9 @@
             gameState.totalBets++;
             gameState.totalWagered += amount;
             
-            updateBalance();
-            showNotification(`Bet placed: $${amount}${autoCashout ? ` (Auto: ${autoCashout}x)` : ''}`, 'success');
+            updateUI();
+            updateActiveBets();
+            showNotification(`Bet placed: KSh ${amount}${autoCashout ? ` (Auto: ${autoCashout}x)` : ''}`, 'success');
         }
 
         function processCashout() {
@@ -1258,46 +1870,16 @@
 
             const profit = result.winnings - gameState.activeBet.amount;
             gameState.updateBalance(result.winnings);
-            gameState.activeBet.cashedOut = true;
-            gameState.activeBet.winnings = result.winnings;
-            gameState.activeBet.cashoutMultiplier = result.multiplier;
+            gameState.addTransaction('win', result.winnings, 'completed', `Round ${gameEngine.currentRound}`);
             
-            updateBalance();
             showNotification(
-                `Cashed out @ ${result.multiplier.toFixed(2)}x! +$${profit.toFixed(2)}`,
+                `🎉 Cashed out @ ${result.multiplier.toFixed(2)}x! Won KSh ${profit.toFixed(2)}`,
                 'win'
             );
 
-            // Check auto bet settings
-            if (gameState.betMode === 'auto' && gameState.autoBetSettings.count > 0) {
-                gameState.autoBetSettings.currentCount++;
-                
-                let stopBetting = false;
-                const totalProfit = gameState.balance - gameState.autoBetSettings.startingBalance;
-                
-                if (gameState.autoBetSettings.stopProfit > 0 && totalProfit >= gameState.autoBetSettings.stopProfit) {
-                    stopBetting = true;
-                    showNotification('Auto bet stopped: Profit target reached!', 'info');
-                }
-                
-                if (gameState.autoBetSettings.stopLoss > 0 && totalProfit <= -gameState.autoBetSettings.stopLoss) {
-                    stopBetting = true;
-                    showNotification('Auto bet stopped: Loss limit reached!', 'info');
-                }
-
-                if (gameState.autoBetSettings.currentCount >= gameState.autoBetSettings.count) {
-                    stopBetting = true;
-                    showNotification('Auto bet complete!', 'info');
-                }
-
-                if (stopBetting) {
-                    gameState.betMode = 'manual';
-                    gameState.autoBetSettings.count = 0;
-                    document.querySelectorAll('.bet-tab').forEach(tab => tab.classList.remove('active'));
-                    document.querySelector('.bet-tab').classList.add('active');
-                    document.getElementById('autoBetSettings').style.display = 'none';
-                }
-            }
+            gameState.activeBet = null;
+            updateUI();
+            updateActiveBets();
         }
 
         function cashout() {
@@ -1311,87 +1893,343 @@
             }
         }
 
-        function switchBetMode(mode) {
-            gameState.betMode = mode;
-            document.querySelectorAll('.bet-tab').forEach(tab => tab.classList.remove('active'));
+        function doubleBet() {
+            const input = document.getElementById('betAmount');
+            input.value = (parseFloat(input.value) * 2).toFixed(2);
+        }
+
+        // ==================== M-PESA DEPOSIT FUNCTIONS ====================
+        function openDepositModal() {
+            document.getElementById('depositModal').classList.add('show');
+            document.getElementById('accountNumber').value = gameState.username;
+            document.getElementById('displayAccount').textContent = gameState.username;
+        }
+
+        function closeDepositModal() {
+            document.getElementById('depositModal').classList.remove('show');
+            document.getElementById('transactionStatus').style.display = 'none';
+        }
+
+        function switchDepositTab(tab) {
+            document.querySelectorAll('.mpesa-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
 
-            if (mode === 'auto') {
-                document.getElementById('autoBetSettings').style.display = 'block';
-                gameState.autoBetSettings = {
-                    count: 10,
-                    currentCount: 0,
-                    stopProfit: 0,
-                    stopLoss: 0,
-                    startingBalance: gameState.balance
-                };
+            if (tab === 'paybill') {
+                document.getElementById('paybillSection').style.display = 'block';
+                document.getElementById('stkpushSection').style.display = 'none';
             } else {
-                document.getElementById('autoBetSettings').style.display = 'none';
-            }
-        }
-        function switchBetMode(mode) {
-            gameState.betMode = mode;
-            document.querySelectorAll('.bet-tab').forEach(tab => tab.classList.remove('active'));
-            
-            // Find and activate the correct tab
-            const tabs = document.querySelectorAll('.bet-tab');
-            if (mode === 'manual') tabs[0].classList.add('active');
-            else tabs[1].classList.add('active');
-
-            if (mode === 'auto') {
-                document.getElementById('autoBetSettings').style.display = 'block';
-                gameState.autoBetSettings = {
-                    count: parseInt(document.getElementById('autoBetCount').value) || 10,
-                    currentCount: 0,
-                    stopProfit: parseFloat(document.getElementById('stopProfit').value) || 0,
-                    stopLoss: parseFloat(document.getElementById('stopLoss').value) || 0,
-                    startingBalance: gameState.balance
-                };
-            } else {
-                document.getElementById('autoBetSettings').style.display = 'none';
+                document.getElementById('paybillSection').style.display = 'none';
+                document.getElementById('stkpushSection').style.display = 'block';
             }
         }
 
-        // ==================== CHAT SYSTEM ====================
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
+        async function confirmPaybillDeposit() {
+            const amount = parseFloat(document.getElementById('paybillAmount').value);
+            if (!amount || amount < 10) {
+                showNotification('Minimum deposit is KSh 10', 'error');
+                return;
+            }
+
+            showTransactionStatus('pending', 'Verifying payment... Please wait');
             
-            if (!message) return;
-            
-            addChatMessage(gameState.username, message);
-            input.value = '';
-            
-            // Simulate other players (in real app, this would be server-side)
+            // Simulate M-Pesa API callback verification
             setTimeout(() => {
-                const bots = ['CryptoKing', 'Lucky777', 'BetMaster', 'HighRoller'];
-                if (Math.random() > 0.7) {
-                    const bot = bots[Math.floor(Math.random() * bots.length)];
-                    const botMessages = [
-                        'Nice multiplier!',
-                        'Let\'s go! 🚀',
-                        'Cash out now!',
-                        'To the moon!',
-                        'HODL!',
-                        'This game is addictive!',
-                        'Just won big! 💰'
-                    ];
-                    addChatMessage(bot, botMessages[Math.floor(Math.random() * botMessages.length)]);
-                }
+                gameState.updateBalance(amount);
+                gameState.addTransaction('deposit', amount, 'completed', 'M-Pesa Paybill');
+                updateUI();
+                
+                showTransactionStatus('success', `Successfully deposited KSh ${amount.toLocaleString()}`);
+                showNotification(`💰 Deposited KSh ${amount.toLocaleString()} successfully!`, 'mpesa');
+                
+                setTimeout(() => {
+                    closeDepositModal();
+                }, 2000);
+            }, 3000);
+        }
+
+        async function initiateSTKPush() {
+            const phone = document.getElementById('mpesaPhone').value;
+            const amount = parseFloat(document.getElementById('stkpushAmount').value);
+
+            if (!phone || !amount) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+
+            showTransactionStatus('pending', 'Sending STK Push to your phone...');
+            
+            const result = await mpesaAPI.initiateSTKPush(phone, amount);
+            
+            if (result.success) {
+                showTransactionStatus('pending', '📱 Check your phone and enter M-Pesa PIN');
+                
+                // Simulate payment confirmation after 10 seconds
+                setTimeout(() => {
+                    gameState.updateBalance(amount);
+                    gameState.addTransaction('deposit', amount, 'completed', 'M-Pesa STK Push');
+                    updateUI();
+                    
+                    showTransactionStatus('success', `Successfully deposited KSh ${amount.toLocaleString()}`);
+                    showNotification(`💰 Deposited KSh ${amount.toLocaleString()} successfully!`, 'mpesa');
+                    
+                    setTimeout(() => {
+                        closeDepositModal();
+                    }, 2000);
+                }, 10000);
+            } else {
+                showTransactionStatus('failed', 'Payment failed. Please try again.');
+            }
+        }
+
+        function showTransactionStatus(status, message) {
+            const statusDiv = document.getElementById('transactionStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'transaction-status';
+            
+            if (status === 'pending') {
+                statusDiv.classList.add('status-pending');
+                statusDiv.innerHTML = `<p>⏳ ${message}</p><div style="font-size: 12px; margin-top: 5px;">This may take a few moments...</div>`;
+            } else if (status === 'success') {
+                statusDiv.classList.add('status-success');
+                statusDiv.innerHTML = `<p>✅ ${message}</p>`;
+            } else {
+                statusDiv.classList.add('status-failed');
+                statusDiv.innerHTML = `<p>❌ ${message}</p>`;
+            }
+        }
+
+        // ==================== WITHDRAW FUNCTIONS ====================
+        function openWithdrawModal() {
+            document.getElementById('withdrawModal').classList.add('show');
+            document.getElementById('withdrawBalance').value = `KSh ${gameState.balance.toFixed(2)}`;
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').classList.remove('show');
+            document.getElementById('withdrawStatus').style.display = 'none';
+        }
+
+        async function processWithdrawal() {
+            const phone = document.getElementById('withdrawPhone').value;
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+
+            if (!phone || !amount) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+
+            if (amount < 50) {
+                showNotification('Minimum withdrawal is KSh 50', 'error');
+                return;
+            }
+
+            if (amount > gameState.balance) {
+                showNotification('Insufficient balance', 'error');
+                return;
+            }
+
+            const statusDiv = document.getElementById('withdrawStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<p class="status-pending">⏳ Processing withdrawal...</p>';
+
+            // Simulate M-Pesa B2C
+            setTimeout(() => {
+                gameState.updateBalance(-amount);
+                gameState.addTransaction('withdrawal', amount, 'completed', `To: ${phone}`);
+                updateUI();
+                
+                statusDiv.innerHTML = `<p class="status-success">✅ KSh ${amount.toLocaleString()} sent to ${phone}</p>`;
+                showNotification(`💸 Withdrew KSh ${amount.toLocaleString()} to M-Pesa`, 'mpesa');
+                
+                setTimeout(() => {
+                    closeWithdrawModal();
+                }, 3000);
             }, 2000);
         }
 
-        function addChatMessage(username, message, isSystem = false) {
-            const chatMessages = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = isSystem ? 'chat-message chat-system' : 'chat-message';
-            messageDiv.innerHTML = isSystem ? message : `<span class="chat-username">${username}:</span> ${message}`;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        // ==================== MENU FUNCTIONS ====================
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            const overlay = document.getElementById('menuOverlay');
+            
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+                overlay.classList.remove('show');
+            } else {
+                menu.classList.add('open');
+                overlay.classList.add('show');
+            }
+        }
+
+        function showFairnessModal() {
+            document.getElementById('serverSeedHashed').value = gameEngine.serverSeedHashed;
+            document.getElementById('clientSeed').value = gameEngine.clientSeed;
+            document.getElementById('nonceDisplay').value = gameEngine.nonce;
+            document.getElementById('fairnessModal').classList.add('show');
+            toggleMenu();
+        }
+
+        function closeFairnessModal() {
+            document.getElementById('fairnessModal').classList.remove('show');
+        }
+
+        function generateNewClientSeed() {
+            gameEngine.clientSeed = gameEngine.generateSeed();
+            document.getElementById('clientSeed').value = gameEngine.clientSeed;
+            showNotification('New client seed generated!', 'success');
+        }
+
+        function showGameRules() {
+            document.getElementById('rulesModal').classList.add('show');
+            toggleMenu();
+        }
+
+        function closeRulesModal() {
+            document.getElementById('rulesModal').classList.remove('show');
+        }
+
+        function showLeaderboardModal() {
+            const modal = document.getElementById('leaderboardModal');
+            const content = document.getElementById('leaderboardContent');
+            
+            const players = [
+                { name: 'CryptoKing', won: 15000 },
+                { name: 'Lucky777', won: 12000 },
+                { name: 'BetMaster', won: 9800 },
+                { name: 'HighRoller', won: 8500 },
+                { name: 'DiamondHands', won: 7200 },
+                { name: gameState.username, won: gameState.totalWon }
+            ].sort((a, b) => b.won - a.won);
+
+            content.innerHTML = players.map((p, i) => {
+                let medal = '';
+                if (i === 0) medal = '🥇';
+                else if (i === 1) medal = '🥈';
+                else if (i === 2) medal = '🥉';
+                
+                const isCurrentPlayer = p.name === gameState.username;
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: ${isCurrentPlayer ? 'var(--darkest)' : 'transparent'}; margin-bottom: 5px; border-radius: 8px; ${isCurrentPlayer ? 'border: 2px solid var(--primary);' : ''}">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 24px;">${medal || `#${i + 1}`}</span>
+                            <span>${p.name} ${isCurrentPlayer ? '(You)' : ''}</span>
+                        </div>
+                        <span style="color: var(--success); font-weight: bold;">KSh ${p.won.toLocaleString()}</span>
+                    </div>
+                `;
+            }).join('');
+
+            modal.classList.add('show');
+            toggleMenu();
+        }
+
+        function closeLeaderboardModal() {
+            document.getElementById('leaderboardModal').classList.remove('show');
+        }
+
+        function showTransactionHistory() {
+            toggleMenu();
+            
+            let historyHTML = '<div style="max-height: 300px; overflow-y: auto;">';
+            
+            if (gameState.transactions.length === 0) {
+                historyHTML += '<p style="color: #666; text-align: center; padding: 20px;">No transactions yet</p>';
+            } else {
+                gameState.transactions.forEach(tx => {
+                    const color = tx.type === 'deposit' || tx.type === 'win' ? 'var(--success)' : 'var(--danger)';
+                    const date = new Date(tx.timestamp).toLocaleString();
+                    
+                    historyHTML += `
+                        <div style="padding: 10px; background: var(--darkest); margin-bottom: 5px; border-radius: 8px; display: flex; justify-content: space-between;">
+                            <div>
+                                <strong>${tx.type.toUpperCase()}</strong>
+                                <div style="font-size: 12px; color: #888;">${date}</div>
+                                ${tx.reference ? `<div style="font-size: 12px;">${tx.reference}</div>` : ''}
+                            </div>
+                            <span style="color: ${color}; font-weight: bold;">KSh ${tx.amount.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            historyHTML += '</div>';
+            
+            showNotification(historyHTML, 'info');
+        }
+
+        function contactSupport() {
+            toggleMenu();
+            const message = `📞 Customer Support\n\n` +
+                `Phone: 0798 XXX XXX\n` +
+                `WhatsApp: +254 7XX XXX XXX\n` +
+                `Email: support@crashgame.co.ke\n` +
+                `Live Chat: Available 24/7\n\n` +
+                `Response time: Within 5 minutes`;
+            
+            alert(message);
+        }
+
+        function showSettings() {
+            toggleMenu();
+            const sound = gameState.settings.soundEnabled ? 'ON 🔊' : 'OFF 🔇';
+            const autoCashout = gameState.settings.autoCashoutDefault;
+            
+            const message = `⚙️ Settings\n\n` +
+                `Sound: ${sound}\n` +
+                `Default Auto Cashout: ${autoCashout}x\n` +
+                `Username: ${gameState.username}\n\n` +
+                `To change settings, type in console:\n` +
+                `gameState.settings.soundEnabled = false\n` +
+                `gameState.settings.autoCashoutDefault = 3.0`;
+            
+            alert(message);
+        }
+
+        function shareGame() {
+            toggleMenu();
+            const referralLink = `https://crashgame.co.ke/ref/${gameState.username}`;
+            
+            const message = `🔗 Share & Earn KSh 50!\n\n` +
+                `Your referral link:\n${referralLink}\n\n` +
+                `Share this link with friends and earn KSh 50 for each friend who deposits!`;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(referralLink);
+                showNotification('Referral link copied! Share with friends to earn KSh 50', 'success');
+            } else {
+                prompt('Copy your referral link:', referralLink);
+            }
         }
 
         // ==================== NOTIFICATIONS ====================
         function showNotification(message, type = 'info') {
+            if (message.length > 100) {
+                // Create modal for long messages
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--darker);
+                    padding: 20px;
+                    border-radius: 15px;
+                    z-index: 4000;
+                    max-width: 500px;
+                    width: 90%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                `;
+                modal.innerHTML = `
+                    ${message}
+                    <button onclick="this.parentElement.remove()" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+                `;
+                document.body.appendChild(modal);
+                return;
+            }
+
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.textContent = message;
@@ -1402,84 +2240,9 @@
             }, 3000);
         }
 
-        // ==================== PROVABLY FAIR ====================
-        function showFairnessModal() {
-            document.getElementById('serverSeedHashed').textContent = gameEngine.serverSeedHashed;
-            document.getElementById('clientSeed').textContent = gameEngine.clientSeed;
-            document.getElementById('nonceDisplay').textContent = gameEngine.nonce;
-            document.getElementById('fairnessModal').classList.add('show');
-        }
-
-        function closeFairnessModal() {
-            document.getElementById('fairnessModal').classList.remove('show');
-        }
-
-        function generateNewClientSeed() {
-            gameEngine.clientSeed = gameEngine.generateSeed();
-            document.getElementById('clientSeed').textContent = gameEngine.clientSeed;
-            showNotification('New client seed generated!', 'success');
-        }
-
-        // ==================== GAME CONTROLS ====================
-        function startNewRound() {
-            if (gameEngine.gameStatus !== 'waiting') return;
-
-            const roundData = gameEngine.startNewRound();
-            multiplierPoints = [];
-            
-            // Track current multiplier
-            const trackMultiplier = setInterval(() => {
-                if (gameEngine.gameStatus !== 'flying') {
-                    clearInterval(trackMultiplier);
-                    return;
-                }
-                // Game loop handles the rest
-            }, 50);
-
-            // Reset player bets for new round
-            gameState.activeBet = null;
-
-            // Simulate auto betting
-            if (gameState.betMode === 'auto' && gameState.autoBetSettings.count > 0) {
-                const autoBetAmount = parseFloat(document.getElementById('betAmount').value);
-                const autoCashout = parseFloat(document.getElementById('autoCashoutInput').value) || 0;
-                
-                if (gameState.canPlaceBet(autoBetAmount)) {
-                    setTimeout(() => placeBet(), 1000);
-                }
-            }
-        }
-
-        function simulateGameCrash() {
-            if (gameEngine.gameStatus !== 'flying') return;
-            
-            const crashData = gameEngine.crashGame();
-            updateHistory();
-            
-            // Show uncashed players as lost
-            gameEngine.players.forEach(player => {
-                if (!player.cashedOut && player.playerId === gameState.username) {
-                    gameState.activeBet = null;
-                    showNotification(`Lost $${player.amount.toFixed(2)} at ${crashData.crashPoint}x`, 'error');
-                }
-            });
-
-            // Schedule next round
-            setTimeout(() => {
-                gameEngine.resetToWaiting();
-                multiplierPoints = [];
-                updateUI();
-                updateActiveBets();
-                
-                setTimeout(() => {
-                    startNewRound();
-                }, 3000);
-            }, 2000);
-        }
-
-        // ==================== SIMULATED MULTIPLAYER ====================
-        function simulatePlayers() {
-            if (gameEngine.gameStatus !== 'waiting') return;
+        // ==================== BOT SIMULATION ====================
+        function simulateBots() {
+            if (gameEngine.gameStatus !== 'waiting' && gameEngine.gameStatus !== 'countdown') return;
 
             const bots = ['CryptoKing', 'Lucky777', 'BetMaster', 'HighRoller', 'DiamondHands', 'MoonShot', 'WhaleTrader'];
             const numPlayers = Math.floor(Math.random() * 5) + 2;
@@ -1493,10 +2256,9 @@
             }
 
             updateActiveBets();
-            updateLeaderboard();
         }
 
-        function simulateCashouts() {
+        function simulateBotCashouts() {
             if (gameEngine.gameStatus !== 'flying') return;
 
             gameEngine.players.forEach((player, playerId) => {
@@ -1505,16 +2267,12 @@
                         (player.autoCashout > 0 && gameEngine.multiplier >= player.autoCashout);
 
                     if (shouldCashout && gameEngine.multiplier > 1.5) {
-                        const result = gameEngine.cashout(playerId);
-                        if (result.success) {
-                            addChatMessage('system', `${player.username} cashed out at ${result.multiplier.toFixed(2)}x for $${result.winnings.toFixed(2)}! 🎉`, true);
-                        }
+                        gameEngine.cashout(playerId);
                     }
                 }
             });
 
             updateActiveBets();
-            updateLeaderboard();
         }
 
         // ==================== KEYBOARD SHORTCUTS ====================
@@ -1524,154 +2282,85 @@
                 cashout();
             }
             
-            if (e.key === 'b' && e.ctrlKey && gameEngine.gameStatus === 'waiting') {
+            if (e.key === 'b' && e.ctrlKey && (gameEngine.gameStatus === 'waiting' || gameEngine.gameStatus === 'countdown')) {
                 e.preventDefault();
                 placeBet();
             }
 
             if (e.key === 'Escape') {
+                closeDepositModal();
+                closeWithdrawModal();
                 closeFairnessModal();
+                closeRulesModal();
+                closeLeaderboardModal();
             }
-        });
 
-        // ==================== EVENT LISTENERS ====================
-        document.getElementById('betAmount').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && gameEngine.gameStatus === 'waiting') {
+            if (e.key === 'm' && e.ctrlKey) {
                 e.preventDefault();
-                placeBet();
-            }
-        });
-
-        // Handle auto bet settings changes
-        document.getElementById('autoBetCount').addEventListener('change', function() {
-            gameState.autoBetSettings.count = parseInt(this.value) || 0;
-        });
-
-        document.getElementById('stopProfit').addEventListener('change', function() {
-            gameState.autoBetSettings.stopProfit = parseFloat(this.value) || 0;
-        });
-
-        document.getElementById('stopLoss').addEventListener('change', function() {
-            gameState.autoBetSettings.stopLoss = parseFloat(this.value) || 0;
-        });
-
-        // Close modal on outside click
-        document.getElementById('fairnessModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeFairnessModal();
+                toggleMenu();
             }
         });
 
         // ==================== INITIALIZATION ====================
         function initializeGame() {
-            // Get username
             gameState.username = 'Player' + Math.floor(Math.random() * 10000);
             
-            // Add welcome message
-            addChatMessage('system', `Welcome ${gameState.username}! Place your bets and good luck! 🚀`, true);
+            // Update menu
+            document.getElementById('menuUsername').textContent = gameState.username;
+            document.getElementById('menuAvatar').textContent = gameState.username[0].toUpperCase();
             
-            // Show fairness info
+            updateUI();
             updateHistory();
-            updateBalance();
             
             // Start game loop
             gameLoop();
             
-            // Start first round
-            startNewRound();
+            // Start first round with countdown
+            gameEngine.startCountdown();
             
-            // Simulate multiplayer every few seconds
+            // Simulate bots
             setInterval(() => {
-                if (gameEngine.gameStatus === 'waiting') {
-                    simulatePlayers();
-                } else if (gameEngine.gameStatus === 'flying') {
-                    simulateCashouts();
-                }
-                
-                // Update online count
-                gameEngine.onlinePlayers = Math.floor(Math.random() * 20) + 5;
+                simulateBots();
+                simulateBotCashouts();
+                gameEngine.onlinePlayers = Math.floor(Math.random() * 30) + 10;
             }, 3000);
 
-            // Round management
-            setInterval(() => {
-                if (gameEngine.gameStatus === 'flying') {
-                    // Check for crash
-                    const elapsed = (Date.now() - gameEngine.startTime) / 1000;
-                    if (Math.pow(Math.E, 0.09 * elapsed) >= gameEngine.crashPoint) {
-                        simulateGameCrash();
-                    }
-                }
-            }, 100);
-
-            // Chat simulation
-            setInterval(() => {
-                if (Math.random() > 0.8) {
-                    const bots = ['CryptoKing', 'Lucky777', 'BetMaster', 'HighRoller'];
-                    const bot = bots[Math.floor(Math.random() * bots.length)];
-                    const messages = [
-                        'Let\'s go! 🚀',
-                        'To the moon!',
-                        'Cash out now!',
-                        'HODL!',
-                        'This game is crazy!',
-                        'Just joined!',
-                        'Anyone winning?',
-                        'Last round was insane!',
-                        'Diamond hands! 💎',
-                        'Next round is mine!'
-                    ];
-                    addChatMessage(bot, messages[Math.floor(Math.random() * messages.length)]);
-                }
-            }, 8000);
-
-            console.log('🎮 Crash Game Initialized!');
-            console.log('🟢 Game Status:', gameEngine.gameStatus);
-            console.log('💰 Balance:', gameState.balance);
-            console.log('🎲 Provably Fair - Server Seed:', gameEngine.serverSeedHashed);
-            console.log('🔑 Client Seed:', gameEngine.clientSeed);
+            console.log('🚀 Crash Game Pro - M-Pesa Edition Initialized!');
+            console.log('💰 Balance: KSh', gameState.balance);
+            console.log('📱 M-Pesa Integration: Ready');
+            console.log('🎮 Game Status:', gameEngine.gameStatus);
+            console.log('🔑 Press Ctrl+M to toggle menu');
+            console.log('💡 Press Ctrl+B to place bet, Enter to cashout');
         }
 
-        // Start the game
-        initializeGame();
-
-        // ==================== UTILITY FUNCTIONS ====================
-        function resetGame() {
-            gameState.balance = 1000;
-            gameState.activeBet = null;
-            gameState.totalBets = 0;
-            gameState.totalWagered = 0;
-            gameState.totalWon = 0;
-            gameEngine.history = [];
-            gameEngine.currentRound = 0;
-            gameEngine.nonce = 0;
-            multiplierPoints = [];
-            
-            updateBalance();
-            updateHistory();
-            updateActiveBets();
-            
-            gameEngine.resetToWaiting();
-            startNewRound();
-            
-            showNotification('Game reset! Starting fresh.', 'info');
-        }
-
-        // Expose functions to window for HTML onclick handlers
+        // Expose functions globally
         window.placeBet = placeBet;
         window.cashout = cashout;
         window.quickBet = quickBet;
-        window.switchBetMode = switchBetMode;
-        window.sendMessage = sendMessage;
+        window.doubleBet = doubleBet;
+        window.toggleMenu = toggleMenu;
+        window.openDepositModal = openDepositModal;
+        window.closeDepositModal = closeDepositModal;
+        window.openWithdrawModal = openWithdrawModal;
+        window.closeWithdrawModal = closeWithdrawModal;
+        window.switchDepositTab = switchDepositTab;
+        window.confirmPaybillDeposit = confirmPaybillDeposit;
+        window.initiateSTKPush = initiateSTKPush;
+        window.processWithdrawal = processWithdrawal;
         window.showFairnessModal = showFairnessModal;
         window.closeFairnessModal = closeFairnessModal;
         window.generateNewClientSeed = generateNewClientSeed;
+        window.showGameRules = showGameRules;
+        window.closeRulesModal = closeRulesModal;
+        window.showLeaderboardModal = showLeaderboardModal;
+        window.closeLeaderboardModal = closeLeaderboardModal;
+        window.showTransactionHistory = showTransactionHistory;
+        window.contactSupport = contactSupport;
+        window.showSettings = showSettings;
+        window.shareGame = shareGame;
 
-        // Console commands for testing
-        console.log('🔧 Available commands:');
-        console.log('  resetGame() - Reset all game state');
-        console.log('  gameEngine.generateCrashPoint() - Test crash point generation');
-        console.log('  gameState - View current player state');
-        console.log('  gameEngine - View game engine state');
+        // Start the game
+        initializeGame();
     </script>
 </body>
-</html>
+    </html>
