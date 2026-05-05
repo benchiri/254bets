@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crash Game Pro - M-Pesa Edition</title>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
         :root {
             --primary: #667eea;
@@ -29,13 +28,203 @@
             overflow-x: hidden;
         }
 
+        /* Top Navigation Bar */
+        .navbar {
+            background: var(--darker);
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 5px;
+            list-style: none;
+        }
+
+        .navbar-menu li {
+            position: relative;
+        }
+
+        .navbar-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .navbar-menu a:hover {
+            background: var(--darkest);
+            color: var(--primary);
+        }
+
+        .navbar-menu a.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--darker);
+            min-width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1001;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-content a {
+            padding: 12px 15px;
+            display: block;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background: var(--darkest);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .online-counter {
+            background: var(--darkest);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: onlinePulse 2s infinite;
+        }
+
+        @keyframes onlinePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+
+        .balance-display {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .balance-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-deposit {
+            background: var(--mpesa);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-deposit:hover {
+            background: var(--safaricom);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-login {
+            background: transparent;
+            border: 2px solid var(--primary);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: var(--primary);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
         /* Side Menu */
         .side-menu {
             position: fixed;
             left: -300px;
-            top: 0;
+            top: 60px;
             width: 300px;
-            height: 100vh;
+            height: calc(100vh - 60px);
             background: var(--darker);
             z-index: 2000;
             transition: left 0.3s ease;
@@ -49,7 +238,7 @@
 
         .menu-overlay {
             position: fixed;
-            top: 0;
+            top: 60px;
             left: 0;
             width: 100%;
             height: 100%;
@@ -65,12 +254,6 @@
         .menu-header {
             padding: 30px 20px;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            text-align: center;
-        }
-
-        .menu-header h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
         }
 
         .menu-profile {
@@ -95,20 +278,6 @@
             font-weight: bold;
         }
 
-        .menu-profile-info {
-            flex: 1;
-        }
-
-        .menu-profile-name {
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .menu-profile-balance {
-            color: var(--success);
-            font-size: 14px;
-        }
-
         .menu-items {
             padding: 15px;
         }
@@ -123,7 +292,6 @@
             cursor: pointer;
             transition: all 0.3s;
             color: white;
-            text-decoration: none;
         }
 
         .menu-item:hover {
@@ -142,35 +310,10 @@
             font-size: 20px;
         }
 
-        .menu-item-text {
-            flex: 1;
-        }
-
-        .menu-item-title {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .menu-item-subtitle {
-            font-size: 12px;
-            color: #888;
-            margin-top: 2px;
-        }
-
         .menu-divider {
             height: 1px;
             background: rgba(255,255,255,0.1);
             margin: 15px 0;
-        }
-
-        .menu-item.badge::after {
-            content: attr(data-badge);
-            background: var(--danger);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            margin-left: auto;
         }
 
         /* Main Container */
@@ -178,90 +321,6 @@
             max-width: 1400px; 
             margin: 0 auto; 
             padding: 20px; 
-        }
-        
-        /* Top Bar */
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .menu-toggle {
-            background: var(--darkest);
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 10px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .menu-toggle:hover {
-            background: var(--primary);
-        }
-        
-        .logo {
-            font-size: 32px;
-            font-weight: bold;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .balance-container {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .balance {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 22px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .balance:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-        }
-        
-        .stats {
-            background: var(--darker);
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            display: flex;
-            gap: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--success);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #888;
         }
         
         .main-content {
@@ -320,7 +379,6 @@
             margin-top: 10px;
         }
 
-        /* Game Status Badges */
         .game-status-badge {
             position: absolute;
             top: 20px;
@@ -396,6 +454,44 @@
             font-size: 14px;
             z-index: 10;
         }
+
+        /* Cashout Display */
+        .cashout-display {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid var(--success);
+            padding: 15px 25px;
+            border-radius: 15px;
+            z-index: 20;
+            display: none;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .cashout-display.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .cashout-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .cashout-details {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
         
         .side-panel {
             display: flex;
@@ -408,6 +504,50 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Live Bet Display */
+        .live-bet-display {
+            background: var(--darkest);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .live-bet-display.active {
+            display: block;
+            animation: glowPulse 1s infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+        }
+
+        .live-bet-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .live-bet-label {
+            color: #888;
+        }
+
+        .live-bet-value {
+            font-weight: bold;
+            color: var(--success);
+            font-size: 18px;
+        }
+
+        .live-bet-multiplier {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--success);
+            text-align: center;
         }
         
         .bet-input-group {
@@ -542,15 +682,8 @@
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
-        }
-        
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
         }
         
         .history-list {
@@ -577,11 +710,6 @@
         .history-item.green { background: var(--success); color: var(--dark); }
         .history-item.purple { background: var(--primary); }
         .history-item.red { background: var(--danger); }
-        
-        .active-bets-title {
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
         
         .bet-list {
             max-height: 200px;
@@ -613,7 +741,7 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
-        /* M-Pesa Modal */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -639,6 +767,8 @@
             width: 90%;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             animation: modalSlideIn 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
         @keyframes modalSlideIn {
@@ -650,6 +780,9 @@
             font-size: 24px;
             margin-bottom: 20px;
             text-align: center;
+        }
+
+        .mpesa-header {
             color: var(--mpesa);
         }
         
@@ -742,57 +875,34 @@
             display: none;
         }
 
-        .status-pending {
-            color: var(--warning);
-            animation: pulse 1s infinite;
-        }
+        .status-pending { color: var(--warning); animation: pulse 1s infinite; }
+        .status-success { color: var(--success); }
+        .status-failed { color: var(--danger); }
 
-        .status-success {
-            color: var(--success);
-        }
-
-        .status-failed {
-            color: var(--danger);
-        }
-
-        /* Quick Deposit Buttons */
-        .quick-deposit {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+        .modal-footer {
+            display: flex;
             gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .quick-deposit-btn {
-            padding: 12px;
-            background: var(--darkest);
-            border: 2px solid var(--mpesa);
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-
-        .quick-deposit-btn:hover {
-            background: var(--mpesa);
-            transform: translateY(-2px);
+            margin-top: 20px;
         }
         
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-            font-size: 12px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            margin-top: 40px;
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
         }
+
+        .btn-primary { background: var(--primary); }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); color: var(--dark); }
 
         /* Notification */
         .notification {
             position: fixed;
-            top: 20px;
+            top: 80px;
             right: 20px;
             padding: 15px 20px;
             border-radius: 10px;
@@ -830,6 +940,12 @@
             .multiplier-display {
                 font-size: 60px;
             }
+            .navbar-menu {
+                display: none;
+            }
+            .mobile-menu-toggle {
+                display: block;
+            }
             .side-panel {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -841,9 +957,11 @@
             .side-panel {
                 grid-template-columns: 1fr;
             }
-            .top-bar {
-                flex-direction: column;
-                text-align: center;
+            .navbar-right {
+                gap: 10px;
+            }
+            .online-counter {
+                display: none;
             }
             .bet-input-group {
                 flex-direction: column;
@@ -851,139 +969,115 @@
             .action-buttons {
                 flex-direction: column;
             }
-            .side-menu {
-                width: 280px;
-            }
         }
     </style>
 </head>
 <body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-left">
+            <button class="mobile-menu-toggle" onclick="toggleMenu()">☰</button>
+            <a href="#" class="navbar-brand">🚀 CRASH GAME PRO</a>
+            <ul class="navbar-menu">
+                <li><a href="#" class="active">🎮 Game</a></li>
+                <li class="dropdown">
+                    <a href="#">💰 Banking ▾</a>
+                    <div class="dropdown-content">
+                        <a href="#" onclick="openDepositModal()">💳 Deposit (M-Pesa)</a>
+                        <a href="#" onclick="openWithdrawModal()">💸 Withdraw</a>
+                        <a href="#" onclick="showTransactionHistory()">📊 History</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#">📊 Stats ▾</a>
+                    <div class="dropdown-content">
+                        <a href="#" onclick="showLeaderboardModal()">🏆 Leaderboard</a>
+                        <a href="#" onclick="showFairnessModal()">🎲 Provably Fair</a>
+                        <a href="#" onclick="showGameRules()">📖 Game Rules</a>
+                    </div>
+                </li>
+                <li><a href="#" onclick="contactSupport()">📞 Support</a></li>
+            </ul>
+        </div>
+        <div class="navbar-right">
+            <div class="online-counter">
+                <span class="online-dot"></span>
+                <span id="onlineCount">1,247</span> online
+            </div>
+            <a href="#" class="balance-display" onclick="openDepositModal()">
+                KSh <span id="balance">1,000.00</span>
+            </a>
+            <button class="btn-deposit" onclick="openDepositModal()">💰 Deposit</button>
+            <button class="btn-login">👤 Login</button>
+        </div>
+    </nav>
+
     <!-- Side Menu Overlay -->
     <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 
-    <!-- Side Menu -->
+    <!-- Side Menu (Mobile) -->
     <div class="side-menu" id="sideMenu">
         <div class="menu-header">
-            <h2>🚀 Crash Game Pro</h2>
-            <p style="font-size: 14px;">M-Pesa Edition</p>
+            <h3>Menu</h3>
         </div>
 
         <div class="menu-profile">
             <div class="menu-avatar" id="menuAvatar">P</div>
-            <div class="menu-profile-info">
-                <div class="menu-profile-name" id="menuUsername">Player</div>
-                <div class="menu-profile-balance">KSh <span id="menuBalance">1,000.00</span></div>
+            <div>
+                <div style="font-weight: bold;" id="menuUsername">Player</div>
+                <div style="color: var(--success); font-size: 14px;">KSh <span id="menuBalance">1,000.00</span></div>
             </div>
         </div>
 
         <div class="menu-items">
-            <div class="menu-item" onclick="openDepositModal()">
+            <div class="menu-item" onclick="openDepositModal(); toggleMenu();">
                 <div class="menu-item-icon">💰</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Deposit via M-Pesa</div>
-                    <div class="menu-item-subtitle">Add funds instantly</div>
-                </div>
+                <div>Deposit via M-Pesa</div>
             </div>
 
-            <div class="menu-item" onclick="openWithdrawModal()">
+            <div class="menu-item" onclick="openWithdrawModal(); toggleMenu();">
                 <div class="menu-item-icon">🏦</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Withdraw Funds</div>
-                    <div class="menu-item-subtitle">Send to M-Pesa</div>
-                </div>
+                <div>Withdraw Funds</div>
             </div>
 
             <div class="menu-divider"></div>
 
-            <div class="menu-item" onclick="showGameRules()">
+            <div class="menu-item" onclick="showGameRules(); toggleMenu();">
                 <div class="menu-item-icon">📖</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Game Rules</div>
-                    <div class="menu-item-subtitle">How to play</div>
-                </div>
+                <div>Game Rules</div>
             </div>
 
-            <div class="menu-item" onclick="showFairnessModal()">
+            <div class="menu-item" onclick="showFairnessModal(); toggleMenu();">
                 <div class="menu-item-icon">🎲</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Provably Fair</div>
-                    <div class="menu-item-subtitle">Verify game outcomes</div>
-                </div>
+                <div>Provably Fair</div>
             </div>
 
-            <div class="menu-item" onclick="showTransactionHistory()">
+            <div class="menu-item" onclick="showTransactionHistory(); toggleMenu();">
                 <div class="menu-item-icon">📊</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Transaction History</div>
-                    <div class="menu-item-subtitle">View all transactions</div>
-                </div>
+                <div>Transaction History</div>
             </div>
 
             <div class="menu-divider"></div>
 
-            <div class="menu-item" onclick="showLeaderboardModal()">
+            <div class="menu-item" onclick="showLeaderboardModal(); toggleMenu();">
                 <div class="menu-item-icon">🏆</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Leaderboard</div>
-                    <div class="menu-item-subtitle">Top players this week</div>
-                </div>
+                <div>Leaderboard</div>
             </div>
 
-            <div class="menu-item" onclick="contactSupport()">
+            <div class="menu-item" onclick="contactSupport(); toggleMenu();">
                 <div class="menu-item-icon">📞</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Customer Support</div>
-                    <div class="menu-item-subtitle">Get help 24/7</div>
-                </div>
+                <div>Customer Support</div>
             </div>
 
-            <div class="menu-item" onclick="showSettings()">
-                <div class="menu-item-icon">⚙️</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Settings</div>
-                    <div class="menu-item-subtitle">Customize experience</div>
-                </div>
-            </div>
-
-            <div class="menu-divider"></div>
-
-            <div class="menu-item" onclick="shareGame()">
+            <div class="menu-item" onclick="shareGame(); toggleMenu();">
                 <div class="menu-item-icon">🔗</div>
-                <div class="menu-item-text">
-                    <div class="menu-item-title">Share & Earn</div>
-                    <div class="menu-item-subtitle">Refer friends, earn KSh 50</div>
-                </div>
+                <div>Share & Earn KSh 50</div>
             </div>
         </div>
     </div>
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
-            <div class="logo">🚀 CRASH GAME PRO</div>
-            <div class="balance-container">
-                <div class="balance" onclick="openDepositModal()">
-                    KSh <span id="balance">1,000.00</span>
-                </div>
-                <div class="stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="roundDisplay">0</div>
-                        <div class="stat-label">Round</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="onlineCount">0</div>
-                        <div class="stat-label">Online</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalBets">0</div>
-                        <div class="stat-label">Bets</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Main Game Area -->
         <div class="main-content">
             <div class="game-area">
@@ -997,16 +1091,41 @@
                     <div class="countdown-number" id="countdownNumber">5</div>
                     <div class="countdown-text">Next round starting...</div>
                 </div>
+
+                <!-- Cashout Display -->
+                <div class="cashout-display" id="cashoutDisplay">
+                    <div class="cashout-details">You won!</div>
+                    <div class="cashout-amount" id="cashoutAmount">KSh 0.00</div>
+                    <div class="cashout-details">
+                        <span id="cashoutMultiplier">0.00x</span> multiplier
+                    </div>
+                </div>
             </div>
 
             <!-- Side Panel -->
             <div class="side-panel">
                 <!-- Betting Panel -->
                 <div class="betting-panel">
+                    <!-- Live Bet Display -->
+                    <div class="live-bet-display" id="liveBetDisplay">
+                        <div class="live-bet-row">
+                            <span class="live-bet-label">Your Bet:</span>
+                            <span class="live-bet-value" id="liveBetAmount">KSh 0</span>
+                        </div>
+                        <div class="live-bet-row">
+                            <span class="live-bet-label">Current Multiplier:</span>
+                            <span class="live-bet-multiplier" id="liveMultiplier">1.00x</span>
+                        </div>
+                        <div class="live-bet-row">
+                            <span class="live-bet-label">Potential Win:</span>
+                            <span class="live-bet-value" id="livePotentialWin" style="font-size: 20px;">KSh 0</span>
+                        </div>
+                    </div>
+
                     <div class="bet-input-group">
                         <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet amount (KSh)">
                         <button class="place-bet-btn" id="placeBetBtn" onclick="placeBet()">Place Bet</button>
-                        <button class="cashout-btn" id="cashoutBtn" onclick="cashout()">Cashout Now!</button>
+                        <button class="cashout-btn" id="cashoutBtn" onclick="cashout()">💰 Cashout Now!</button>
                     </div>
                     
                     <div class="amount-buttons">
@@ -1026,21 +1145,14 @@
                         <input type="number" id="autoCashoutInput" placeholder="2.00" step="0.1" min="1.1">
                         <span>x</span>
                     </div>
-
-                    <div class="quick-deposit">
-                        <button class="quick-deposit-btn" onclick="openDepositModal()">💰 Deposit</button>
-                        <button class="quick-deposit-btn" onclick="openWithdrawModal()">💳 Withdraw</button>
-                    </div>
                 </div>
 
                 <!-- Game History -->
                 <div class="history-section">
-                    <div class="history-header">
-                        <h3>📊 Game History</h3>
-                    </div>
+                    <h3>📊 Game History</h3>
                     <div class="history-list" id="historyList"></div>
                     
-                    <h3 class="active-bets-title">🎯 Active Bets</h3>
+                    <h3 style="margin-top: 15px;">🎯 Active Bets</h3>
                     <div class="bet-list" id="activeBetList">
                         <div style="text-align: center; color: #666; padding: 20px;">
                             No active bets
@@ -1049,19 +1161,12 @@
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>© 2024 Crash Game Pro | M-Pesa Edition | Licensed and Regulated</p>
-            <p>Play Responsibly. 18+ Only. Terms & Conditions Apply.</p>
-            <p>Powered by Safaricom M-Pesa API</p>
-        </div>
     </div>
 
     <!-- M-Pesa Deposit Modal -->
     <div class="modal" id="depositModal">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header mpesa-header">
                 <div class="mpesa-logo">📱 M-PESA</div>
                 Deposit Funds
             </div>
@@ -1115,8 +1220,8 @@
 
                 <div id="transactionStatus" class="transaction-status"></div>
             </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="modal-btn btn-danger" onclick="closeDepositModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            <div class="modal-footer">
+                <button class="modal-btn btn-danger" onclick="closeDepositModal()">Close</button>
             </div>
         </div>
     </div>
@@ -1124,7 +1229,7 @@
     <!-- Withdraw Modal -->
     <div class="modal" id="withdrawModal">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header mpesa-header">
                 <div class="mpesa-logo">💸</div>
                 Withdraw to M-Pesa
             </div>
@@ -1146,8 +1251,8 @@
                 </button>
                 <div id="withdrawStatus" class="transaction-status"></div>
             </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="modal-btn btn-danger" onclick="closeWithdrawModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            <div class="modal-footer">
+                <button class="modal-btn btn-danger" onclick="closeWithdrawModal()">Close</button>
             </div>
         </div>
     </div>
@@ -1173,8 +1278,8 @@
                     Generate New Client Seed
                 </button>
             </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="modal-btn btn-danger" onclick="closeFairnessModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            <div class="modal-footer">
+                <button class="modal-btn btn-danger" onclick="closeFairnessModal()">Close</button>
             </div>
         </div>
     </div>
@@ -1198,14 +1303,10 @@
                     <h3 style="margin-top: 20px;">🎯 Auto Cashout</h3>
                     <p>• Set auto cashout to automatically secure profits</p>
                     <p>• Recommended for beginners</p>
-                    
-                    <h3 style="margin-top: 20px;">🎲 Provably Fair</h3>
-                    <p>• Every round is verifiable and transparent</p>
-                    <p>• Uses cryptographic algorithms for fairness</p>
                 </div>
             </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="modal-btn btn-primary" onclick="closeRulesModal()" style="flex: 1; padding: 12px; background: var(--primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Got it!</button>
+            <div class="modal-footer">
+                <button class="modal-btn btn-primary" onclick="closeRulesModal()">Got it!</button>
             </div>
         </div>
     </div>
@@ -1214,182 +1315,14 @@
     <div class="modal" id="leaderboardModal">
         <div class="modal-content">
             <div class="modal-header">🏆 Top Players</div>
-            <div class="modal-body" id="leaderboardContent">
-                <!-- Dynamically populated -->
-            </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="modal-btn btn-danger" onclick="closeLeaderboardModal()" style="flex: 1; padding: 12px; background: var(--danger); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            <div class="modal-body" id="leaderboardContent"></div>
+            <div class="modal-footer">
+                <button class="modal-btn btn-danger" onclick="closeLeaderboardModal()">Close</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== M-PESA API INTEGRATION ====================
-        class MPesaAPI {
-            constructor() {
-                this.consumerKey = 'YOUR_CONSUMER_KEY';
-                this.consumerSecret = 'YOUR_CONSUMER_SECRET';
-                this.passkey = 'YOUR_PASSKEY';
-                this.shortCode = '174379'; // Sandbox shortcode
-                this.paybillNumber = '247247';
-                this.accountReference = 'CRASH_GAME';
-                this.baseURL = 'https://sandbox.safaricom.co.ke';
-                this.accessToken = null;
-            }
-
-            async getAccessToken() {
-                // In production, this should be done server-side
-                const auth = btoa(`${this.consumerKey}:${this.consumerSecret}`);
-                
-                try {
-                    const response = await fetch(`${this.baseURL}/oauth/v1/generate?grant_type=client_credentials`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Basic ${auth}`
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    this.accessToken = data.access_token;
-                    return this.accessToken;
-                } catch (error) {
-                    console.error('Failed to get access token:', error);
-                    // For demo, simulate token
-                    this.accessToken = 'demo_token_' + Date.now();
-                    return this.accessToken;
-                }
-            }
-
-            async initiateSTKPush(phoneNumber, amount) {
-                await this.getAccessToken();
-                
-                const timestamp = this.getTimestamp();
-                const password = btoa(`${this.shortCode}${this.passkey}${timestamp}`);
-                
-                const requestData = {
-                    BusinessShortCode: this.shortCode,
-                    Password: password,
-                    Timestamp: timestamp,
-                    TransactionType: 'CustomerPayBillOnline',
-                    Amount: Math.round(amount),
-                    PartyA: phoneNumber,
-                    PartyB: this.shortCode,
-                    PhoneNumber: phoneNumber,
-                    CallBackURL: 'https://yourdomain.com/mpesa/callback',
-                    AccountReference: this.accountReference,
-                    TransactionDesc: 'Crash Game Deposit'
-                };
-
-                try {
-                    const response = await fetch(`${this.baseURL}/mpesa/stkpush/v1/processrequest`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-                    
-                    const data = await response.json();
-                    return {
-                        success: true,
-                        checkoutRequestID: data.CheckoutRequestID,
-                        merchantRequestID: data.MerchantRequestID,
-                        responseCode: data.ResponseCode,
-                        responseDescription: data.ResponseDescription
-                    };
-                } catch (error) {
-                    console.error('STK Push failed:', error);
-                    // Simulate success for demo
-                    return {
-                        success: true,
-                        checkoutRequestID: 'ws_CO_' + Date.now(),
-                        merchantRequestID: '100000-' + Date.now(),
-                        responseCode: '0',
-                        responseDescription: 'Success. Request accepted for processing'
-                    };
-                }
-            }
-
-            async querySTKStatus(checkoutRequestID) {
-                await this.getAccessToken();
-                
-                const timestamp = this.getTimestamp();
-                const password = btoa(`${this.shortCode}${this.passkey}${timestamp}`);
-                
-                const requestData = {
-                    BusinessShortCode: this.shortCode,
-                    Password: password,
-                    Timestamp: timestamp,
-                    CheckoutRequestID: checkoutRequestID
-                };
-
-                try {
-                    const response = await fetch(`${this.baseURL}/mpesa/stkpushquery/v1/query`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-                    
-                    const data = await response.json();
-                    return data;
-                } catch (error) {
-                    console.error('Query failed:', error);
-                    return null;
-                }
-            }
-
-            async sendB2C(phoneNumber, amount) {
-                await this.getAccessToken();
-                
-                const requestData = {
-                    InitiatorName: 'testapi',
-                    SecurityCredential: 'YOUR_SECURITY_CREDENTIAL',
-                    CommandID: 'BusinessPayment',
-                    Amount: Math.round(amount),
-                    PartyA: this.shortCode,
-                    PartyB: phoneNumber,
-                    Remarks: 'Withdrawal from Crash Game',
-                    QueueTimeOutURL: 'https://yourdomain.com/mpesa/b2c/queue',
-                    ResultURL: 'https://yourdomain.com/mpesa/b2c/result',
-                    Occassion: 'Game Withdrawal'
-                };
-
-                try {
-                    const response = await fetch(`${this.baseURL}/mpesa/b2c/v1/paymentrequest`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${this.accessToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-                    
-                    const data = await response.json();
-                    return data;
-                } catch (error) {
-                    console.error('B2C failed:', error);
-                    return null;
-                }
-            }
-
-            getTimestamp() {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                const seconds = String(now.getSeconds()).padStart(2, '0');
-                return `${year}${month}${day}${hours}${minutes}${seconds}`;
-            }
-        }
-
-        const mpesaAPI = new MPesaAPI();
-
         // ==================== GAME ENGINE ====================
         class GameEngine {
             constructor() {
@@ -1400,15 +1333,41 @@
                 this.serverSeedHashed = this.hashSeed(this.serverSeed);
                 this.clientSeed = this.generateSeed();
                 this.nonce = 0;
-                this.gameStatus = 'waiting'; // waiting, flying, crashed, countdown
+                this.gameStatus = 'waiting';
                 this.multiplier = 1.00;
                 this.crashPoint = 0;
                 this.startTime = null;
                 this.gameLoop = null;
                 this.countdownInterval = null;
                 this.countdown = 5;
-                this.onlinePlayers = 0;
+                this.onlinePlayers = 1247;
                 this.totalBetsPlaced = 0;
+                this.fakePlayers = this.generateFakePlayers();
+            }
+
+            generateFakePlayers() {
+                const names = [
+                    'CryptoKing', 'Lucky777', 'BetMaster', 'HighRoller', 'DiamondHands',
+                    'MoonShot', 'WhaleTrader', 'SafariBet', 'NairobiKing', 'MombasaPro',
+                    'KisumuWinner', 'NakuruBoss', 'EldoretStar', 'ThikaChamp', 'KiambuPro',
+                    'MachakosKing', 'MeruWinner', 'NyeriBoss', 'EmbuStar', 'GarissaPro',
+                    'BitcoinBoss', 'EthereumKing', 'SolanaStar', 'CardanoPro', 'RippleMaster',
+                    'DogeTrader', 'ShibaWinner', 'AvalancheKing', 'PolkadotStar', 'ChainlinkPro',
+                    'LitecoinBoss', 'MoneroKing', 'ZcashStar', 'DashPro', 'TronMaster',
+                    'TezosWinner', 'CosmosKing', 'AlgorandStar', 'VeChainPro', 'StellarBoss',
+                    'HederaKing', 'ThetaStar', 'FilecoinPro', 'InternetMaster', 'AaveWinner'
+                ];
+                
+                const fakePlayers = [];
+                for (let i = 0; i < 1000; i++) {
+                    fakePlayers.push({
+                        id: `fake_${i}`,
+                        name: names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random() * 1000),
+                        balance: Math.floor(Math.random() * 10000) + 100,
+                        totalWon: Math.floor(Math.random() * 50000)
+                    });
+                }
+                return fakePlayers;
             }
 
             generateSeed() {
@@ -1484,6 +1443,7 @@
                 this.players.clear();
                 
                 document.getElementById('countdownOverlay').classList.remove('show');
+                document.getElementById('cashoutDisplay').classList.remove('show');
 
                 if (this.gameLoop) clearInterval(this.gameLoop);
                 
@@ -1491,7 +1451,8 @@
                     this.updateGame();
                 }, 50);
 
-                console.log(`🎮 Round ${this.currentRound} started - Crash Point: ${this.crashPoint}x`);
+                // Fluctuate online players
+                this.onlinePlayers = Math.floor(Math.random() * 200) + 1150;
             }
 
             updateGame() {
@@ -1526,12 +1487,9 @@
                     }
                 });
 
-                // Start countdown for next round after 3 seconds
                 setTimeout(() => {
                     this.startCountdown();
                 }, 3000);
-
-                console.log(`💥 Round ${this.currentRound} crashed at ${this.crashPoint}x`);
             }
 
             placeBet(playerId, username, amount, autoCashout = 0) {
@@ -1583,11 +1541,6 @@
                 this.username = '';
                 this.activeBet = null;
                 this.transactions = [];
-                this.settings = {
-                    soundEnabled: true,
-                    autoCashoutDefault: 2.0,
-                    animationsEnabled: true
-                };
             }
 
             updateBalance(amount) {
@@ -1691,6 +1644,7 @@
         function updateUI() {
             const display = document.getElementById('multiplierDisplay');
             const badge = document.getElementById('gameStatusBadge');
+            const liveBetDisplay = document.getElementById('liveBetDisplay');
 
             // Update multiplier display
             display.className = 'multiplier-display';
@@ -1704,16 +1658,29 @@
                 display.classList.add('crashed');
                 badge.textContent = 'CRASHED';
                 badge.className = 'game-status-badge status-crashed';
+                liveBetDisplay.classList.remove('active');
             } else if (gameEngine.gameStatus === 'countdown') {
                 display.textContent = gameEngine.countdown;
                 display.classList.add('countdown');
                 badge.textContent = 'NEXT ROUND';
                 badge.className = 'game-status-badge status-countdown';
+                liveBetDisplay.classList.remove('active');
             } else {
                 display.textContent = '1.00x';
                 display.classList.add('waiting');
                 badge.textContent = 'WAITING';
                 badge.className = 'game-status-badge status-waiting';
+            }
+
+            // Update live bet display
+            if (gameState.activeBet && gameEngine.gameStatus === 'flying' && !gameState.activeBet.cashedOut && !gameState.activeBet.lost) {
+                liveBetDisplay.classList.add('active');
+                document.getElementById('liveBetAmount').textContent = `KSh ${gameState.activeBet.amount.toFixed(2)}`;
+                document.getElementById('liveMultiplier').textContent = gameEngine.multiplier.toFixed(2) + 'x';
+                const potentialWin = gameState.activeBet.amount * gameEngine.multiplier;
+                document.getElementById('livePotentialWin').textContent = `KSh ${potentialWin.toFixed(2)}`;
+            } else if (!gameState.activeBet || gameState.activeBet.cashedOut || gameState.activeBet.lost) {
+                liveBetDisplay.classList.remove('active');
             }
 
             // Update buttons
@@ -1737,11 +1704,20 @@
 
             // Update other stats
             document.getElementById('currentRound').textContent = gameEngine.currentRound;
-            document.getElementById('roundDisplay').textContent = gameEngine.currentRound;
-            document.getElementById('onlineCount').textContent = gameEngine.onlinePlayers;
-            document.getElementById('totalBets').textContent = gameEngine.totalBetsPlaced;
+            document.getElementById('onlineCount').textContent = gameEngine.onlinePlayers.toLocaleString();
             document.getElementById('balance').textContent = gameState.balance.toLocaleString('en-KE', { minimumFractionDigits: 2 });
             document.getElementById('menuBalance').textContent = gameState.balance.toLocaleString('en-KE', { minimumFractionDigits: 2 });
+        }
+
+        function showCashoutDisplay(winnings, multiplier) {
+            const cashoutDisplay = document.getElementById('cashoutDisplay');
+            document.getElementById('cashoutAmount').textContent = `KSh ${winnings.toFixed(2)}`;
+            document.getElementById('cashoutMultiplier').textContent = `${multiplier.toFixed(2)}x`;
+            cashoutDisplay.classList.add('show');
+            
+            setTimeout(() => {
+                cashoutDisplay.classList.remove('show');
+            }, 3000);
         }
 
         function updateHistory() {
@@ -1872,6 +1848,9 @@
             gameState.updateBalance(result.winnings);
             gameState.addTransaction('win', result.winnings, 'completed', `Round ${gameEngine.currentRound}`);
             
+            // Show cashout display on game area
+            showCashoutDisplay(result.winnings, result.multiplier);
+            
             showNotification(
                 `🎉 Cashed out @ ${result.multiplier.toFixed(2)}x! Won KSh ${profit.toFixed(2)}`,
                 'win'
@@ -1911,7 +1890,8 @@
         }
 
         function switchDepositTab(tab) {
-            document.querySelectorAll('.mpesa-tab').forEach(t => t.classList.remove('active'));
+            const tabs = document.querySelectorAll('.mpesa-tab');
+            tabs.forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
 
             if (tab === 'paybill') {
@@ -1932,7 +1912,6 @@
 
             showTransactionStatus('pending', 'Verifying payment... Please wait');
             
-            // Simulate M-Pesa API callback verification
             setTimeout(() => {
                 gameState.updateBalance(amount);
                 gameState.addTransaction('deposit', amount, 'completed', 'M-Pesa Paybill');
@@ -1958,12 +1937,9 @@
 
             showTransactionStatus('pending', 'Sending STK Push to your phone...');
             
-            const result = await mpesaAPI.initiateSTKPush(phone, amount);
-            
-            if (result.success) {
+            setTimeout(() => {
                 showTransactionStatus('pending', '📱 Check your phone and enter M-Pesa PIN');
                 
-                // Simulate payment confirmation after 10 seconds
                 setTimeout(() => {
                     gameState.updateBalance(amount);
                     gameState.addTransaction('deposit', amount, 'completed', 'M-Pesa STK Push');
@@ -1976,9 +1952,7 @@
                         closeDepositModal();
                     }, 2000);
                 }, 10000);
-            } else {
-                showTransactionStatus('failed', 'Payment failed. Please try again.');
-            }
+            }, 2000);
         }
 
         function showTransactionStatus(status, message) {
@@ -1988,7 +1962,7 @@
             
             if (status === 'pending') {
                 statusDiv.classList.add('status-pending');
-                statusDiv.innerHTML = `<p>⏳ ${message}</p><div style="font-size: 12px; margin-top: 5px;">This may take a few moments...</div>`;
+                statusDiv.innerHTML = `<p>⏳ ${message}</p>`;
             } else if (status === 'success') {
                 statusDiv.classList.add('status-success');
                 statusDiv.innerHTML = `<p>✅ ${message}</p>`;
@@ -2032,7 +2006,6 @@
             statusDiv.style.display = 'block';
             statusDiv.innerHTML = '<p class="status-pending">⏳ Processing withdrawal...</p>';
 
-            // Simulate M-Pesa B2C
             setTimeout(() => {
                 gameState.updateBalance(-amount);
                 gameState.addTransaction('withdrawal', amount, 'completed', `To: ${phone}`);
@@ -2066,7 +2039,6 @@
             document.getElementById('clientSeed').value = gameEngine.clientSeed;
             document.getElementById('nonceDisplay').value = gameEngine.nonce;
             document.getElementById('fairnessModal').classList.add('show');
-            toggleMenu();
         }
 
         function closeFairnessModal() {
@@ -2081,7 +2053,6 @@
 
         function showGameRules() {
             document.getElementById('rulesModal').classList.add('show');
-            toggleMenu();
         }
 
         function closeRulesModal() {
@@ -2092,36 +2063,40 @@
             const modal = document.getElementById('leaderboardModal');
             const content = document.getElementById('leaderboardContent');
             
-            const players = [
-                { name: 'CryptoKing', won: 15000 },
-                { name: 'Lucky777', won: 12000 },
-                { name: 'BetMaster', won: 9800 },
-                { name: 'HighRoller', won: 8500 },
-                { name: 'DiamondHands', won: 7200 },
-                { name: gameState.username, won: gameState.totalWon }
-            ].sort((a, b) => b.won - a.won);
+            const players = gameEngine.fakePlayers
+                .sort((a, b) => b.totalWon - a.totalWon)
+                .slice(0, 50)
+                .map((p, i) => ({ ...p, rank: i + 1 }));
+            
+            // Add current player
+            const currentPlayer = {
+                name: gameState.username,
+                totalWon: gameState.totalWon,
+                rank: players.length + 1,
+                isCurrent: true
+            };
+            players.push(currentPlayer);
 
-            content.innerHTML = players.map((p, i) => {
+            content.innerHTML = players.map(p => {
                 let medal = '';
-                if (i === 0) medal = '🥇';
-                else if (i === 1) medal = '🥈';
-                else if (i === 2) medal = '🥉';
+                if (p.rank === 1) medal = '🥇';
+                else if (p.rank === 2) medal = '🥈';
+                else if (p.rank === 3) medal = '🥉';
                 
-                const isCurrentPlayer = p.name === gameState.username;
+                const isCurrentPlayer = p.isCurrent || p.name === gameState.username;
                 
                 return `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: ${isCurrentPlayer ? 'var(--darkest)' : 'transparent'}; margin-bottom: 5px; border-radius: 8px; ${isCurrentPlayer ? 'border: 2px solid var(--primary);' : ''}">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 24px;">${medal || `#${i + 1}`}</span>
+                            <span style="font-size: 24px; width: 40px;">${medal || `#${p.rank}`}</span>
                             <span>${p.name} ${isCurrentPlayer ? '(You)' : ''}</span>
                         </div>
-                        <span style="color: var(--success); font-weight: bold;">KSh ${p.won.toLocaleString()}</span>
+                        <span style="color: var(--success); font-weight: bold;">KSh ${p.totalWon.toLocaleString()}</span>
                     </div>
                 `;
             }).join('');
 
             modal.classList.add('show');
-            toggleMenu();
         }
 
         function closeLeaderboardModal() {
@@ -2129,8 +2104,6 @@
         }
 
         function showTransactionHistory() {
-            toggleMenu();
-            
             let historyHTML = '<div style="max-height: 300px; overflow-y: auto;">';
             
             if (gameState.transactions.length === 0) {
@@ -2155,11 +2128,32 @@
             
             historyHTML += '</div>';
             
-            showNotification(historyHTML, 'info');
+            // Create a modal-like notification
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--darker);
+                padding: 20px;
+                border-radius: 15px;
+                z-index: 4000;
+                max-width: 500px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            `;
+            modal.innerHTML = `
+                <h3 style="margin-bottom: 15px;">📊 Transaction History</h3>
+                ${historyHTML}
+                <button onclick="this.parentElement.remove()" style="width: 100%; margin-top: 15px; padding: 10px; background: var(--primary); border: none; border-radius: 8px; color: white; cursor: pointer;">Close</button>
+            `;
+            document.body.appendChild(modal);
         }
 
         function contactSupport() {
-            toggleMenu();
             const message = `📞 Customer Support\n\n` +
                 `Phone: 0798 XXX XXX\n` +
                 `WhatsApp: +254 7XX XXX XXX\n` +
@@ -2170,29 +2164,8 @@
             alert(message);
         }
 
-        function showSettings() {
-            toggleMenu();
-            const sound = gameState.settings.soundEnabled ? 'ON 🔊' : 'OFF 🔇';
-            const autoCashout = gameState.settings.autoCashoutDefault;
-            
-            const message = `⚙️ Settings\n\n` +
-                `Sound: ${sound}\n` +
-                `Default Auto Cashout: ${autoCashout}x\n` +
-                `Username: ${gameState.username}\n\n` +
-                `To change settings, type in console:\n` +
-                `gameState.settings.soundEnabled = false\n` +
-                `gameState.settings.autoCashoutDefault = 3.0`;
-            
-            alert(message);
-        }
-
         function shareGame() {
-            toggleMenu();
             const referralLink = `https://crashgame.co.ke/ref/${gameState.username}`;
-            
-            const message = `🔗 Share & Earn KSh 50!\n\n` +
-                `Your referral link:\n${referralLink}\n\n` +
-                `Share this link with friends and earn KSh 50 for each friend who deposits!`;
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(referralLink);
@@ -2205,7 +2178,6 @@
         // ==================== NOTIFICATIONS ====================
         function showNotification(message, type = 'info') {
             if (message.length > 100) {
-                // Create modal for long messages
                 const modal = document.createElement('div');
                 modal.style.cssText = `
                     position: fixed;
@@ -2244,15 +2216,14 @@
         function simulateBots() {
             if (gameEngine.gameStatus !== 'waiting' && gameEngine.gameStatus !== 'countdown') return;
 
-            const bots = ['CryptoKing', 'Lucky777', 'BetMaster', 'HighRoller', 'DiamondHands', 'MoonShot', 'WhaleTrader'];
-            const numPlayers = Math.floor(Math.random() * 5) + 2;
+            const numPlayers = Math.floor(Math.random() * 8) + 3;
 
             for (let i = 0; i < numPlayers; i++) {
-                const bot = bots[Math.floor(Math.random() * bots.length)];
-                const amount = (Math.random() * 100 + 1).toFixed(2);
-                const autoCashout = Math.random() > 0.5 ? (Math.random() * 5 + 1.5).toFixed(2) : 0;
+                const randomPlayer = gameEngine.fakePlayers[Math.floor(Math.random() * gameEngine.fakePlayers.length)];
+                const amount = (Math.random() * 500 + 10).toFixed(2);
+                const autoCashout = Math.random() > 0.4 ? (Math.random() * 5 + 1.5).toFixed(2) : 0;
 
-                gameEngine.placeBet(bot, bot, parseFloat(amount), parseFloat(autoCashout));
+                gameEngine.placeBet(randomPlayer.name, randomPlayer.name, parseFloat(amount), parseFloat(autoCashout));
             }
 
             updateActiveBets();
@@ -2263,10 +2234,10 @@
 
             gameEngine.players.forEach((player, playerId) => {
                 if (playerId !== gameState.username && !player.cashedOut && !player.lost) {
-                    const shouldCashout = Math.random() > 0.5 || 
+                    const shouldCashout = Math.random() > 0.6 || 
                         (player.autoCashout > 0 && gameEngine.multiplier >= player.autoCashout);
 
-                    if (shouldCashout && gameEngine.multiplier > 1.5) {
+                    if (shouldCashout && gameEngine.multiplier > 1.3) {
                         gameEngine.cashout(playerId);
                     }
                 }
@@ -2318,15 +2289,16 @@
             // Start first round with countdown
             gameEngine.startCountdown();
             
-            // Simulate bots
+            // Simulate bots and online players
             setInterval(() => {
                 simulateBots();
                 simulateBotCashouts();
-                gameEngine.onlinePlayers = Math.floor(Math.random() * 30) + 10;
+                gameEngine.onlinePlayers = Math.floor(Math.random() * 200) + 1150;
             }, 3000);
 
             console.log('🚀 Crash Game Pro - M-Pesa Edition Initialized!');
             console.log('💰 Balance: KSh', gameState.balance);
+            console.log('👥 Online Players:', gameEngine.onlinePlayers.toLocaleString());
             console.log('📱 M-Pesa Integration: Ready');
             console.log('🎮 Game Status:', gameEngine.gameStatus);
             console.log('🔑 Press Ctrl+M to toggle menu');
@@ -2356,7 +2328,6 @@
         window.closeLeaderboardModal = closeLeaderboardModal;
         window.showTransactionHistory = showTransactionHistory;
         window.contactSupport = contactSupport;
-        window.showSettings = showSettings;
         window.shareGame = shareGame;
 
         // Start the game
